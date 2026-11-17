@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 
 import anthropic
@@ -17,7 +18,9 @@ class Claude:
     def __init__(self, cfg: Config, tracker: CostTracker):
         self.cfg = cfg
         self.tracker = tracker
-        self.client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY
+        # A key made for a user (sk-ant-usr-...) is not tied to a workspace, so the API needs the workspace id as well.
+        ws = os.environ.get("ANTHROPIC_WORKSPACE_ID", "").strip()
+        self.client = anthropic.Anthropic(default_headers={"anthropic-workspace-id": ws} if ws else None)  # key: ANTHROPIC_API_KEY
 
     def ask(self, *, label: str, model: str, system: str, user: str,
             tools: list | None = None, max_tokens: int = 16000) -> str:

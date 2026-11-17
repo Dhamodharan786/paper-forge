@@ -33,6 +33,11 @@ def cmd_doctor(args) -> int:
         checks.append((False, "anthropic package", "run: pip install -r requirements.txt"))
     checks.append((bool(os.environ.get("ANTHROPIC_API_KEY")), "ANTHROPIC_API_KEY set",
                    "create a key in the Anthropic console and set it as an environment variable"))
+    key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if key.startswith("sk-ant-usr-"):
+        has_ws = bool(os.environ.get("ANTHROPIC_WORKSPACE_ID", "").strip())
+        checks.append((has_ws, "user-scoped key has a workspace id (ANTHROPIC_WORKSPACE_ID)",
+                       "this key is not tied to a workspace: set ANTHROPIC_WORKSPACE_ID, or create the key inside a workspace"))
     checks.append((cfg.repo.is_dir(), f"repo folder {cfg.repo}", "fix [paths] repo in forge.toml"))
     checks.append((shutil.which("git") is not None, "git on PATH", "install git"))
     for rel in ("companies/tools/validate_placement_papers.py", "scripts/verify-solutions.py",
@@ -311,7 +316,7 @@ def main(argv=None) -> int:
     g.add_argument("--dev-tasks", action="store_true", help="write a developer task file per missing type")
     g.set_defaults(fn=cmd_gap)
 
-    v = sub.add_parser("review", help="open the review screen: edit difficulty per question, download the PDF")
+    v = sub.add_parser("app", aliases=["review"], help="open the Paper Forge web app (the whole flow, in your browser)")
     v.add_argument("--port", type=int, default=8765)
     v.add_argument("--no-browser", action="store_true")
     v.set_defaults(fn=cmd_review)

@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Paper Forge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+:root{
+  --bg:#f2f5f7; --surface:#ffffff; --surface-2:#f7f9fa; --line:#dde3e8; --line-strong:#c4ced6;
+  --fg:#13202b; --muted:#566673; --accent:#0b7a75; --accent-soft:#dff1ef; --accent-ink:#ffffff;
+  --ok:#17803d; --ok-soft:#e1f4e7; --warn:#a15c00; --warn-soft:#fdf0d6; --bad:#b42318; --bad-soft:#fde7e4;
+  --easy:#2f8f5b; --med:#c07a12; --hard:#b4402f;
+  --f-head:'Space Grotesk',system-ui,sans-serif; --f-body:'Inter',system-ui,sans-serif; --f-mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d141a; --surface:#141d25; --surface-2:#1a252f; --line:#26343f; --line-strong:#34454f;
+  --fg:#e5ecf1; --muted:#97a8b4; --accent:#3cc4b8; --accent-soft:#12343a; --accent-ink:#04201e;
+  --ok:#52c27a; --ok-soft:#14301f; --warn:#e5a93f; --warn-soft:#352a11; --bad:#f0786b; --bad-soft:#3a1c19;
+  --easy:#52c27a; --med:#e5a93f; --hard:#f0786b; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.55;padding:0 16px 48px}
+.wrap{max-width:1200px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--f-head);margin:0;letter-spacing:-.01em}
+p{margin:0}
+.mono{font-family:var(--f-mono)} .muted{color:var(--muted)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+.top{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line);margin:0 -16px;padding:0 16px}
+.top-in{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-block:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.mark{width:30px;height:30px;border-radius:8px;background:var(--accent);display:grid;place-items:center}
+.mark svg{width:18px;height:18px}
+.brand h1{font-size:19px} .brand small{display:block;color:var(--muted);font-size:12px;line-height:1.2}
+.status{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.banner{margin-top:16px;background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn);border-radius:var(--r);padding:8px 12px;font-size:13px}
+.banner.bad{background:var(--bad-soft);color:var(--bad);border-color:var(--bad)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.info{background:var(--accent-soft);color:var(--accent)}
+.pill.mute{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.btn{border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--accent)} .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)} .btn.sm{padding:4px 10px;font-size:13px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;min-width:520px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:600;background:var(--surface-2);white-space:nowrap}
+tr:last-child td{border-bottom:0} td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+.dot.e{background:var(--easy)}.dot.m{background:var(--med)}.dot.h{background:var(--hard)}
+.steps{display:flex;gap:8px;overflow-x:auto;padding:16px 0 6px}
+.steps button{flex:1 0 150px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;cursor:pointer;min-width:150px}
+.steps button b{display:block;font-family:var(--f-head);font-size:14px}
+.steps button span{font-size:12px;color:var(--muted)}
+.steps button[aria-selected="true"]{border-color:var(--accent);box-shadow:inset 0 -3px 0 var(--accent)}
+.steps button .who{display:inline-block;margin-top:4px;font-size:11px;font-family:var(--f-mono);color:var(--accent)}
+.steps button.done b::after{content:" ✓";color:var(--ok)}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;margin-top:10px;align-items:start}
+@media (max-width:980px){.stage{grid-template-columns:minmax(0,1fr)}}
+.side{display:grid;gap:12px} .side .card{padding:14px} .side h4{font-size:13px;margin-bottom:6px}
+.side ul{margin:0;padding-left:18px;color:var(--muted);font-size:13px} .side li+li{margin-top:4px}
+.win{background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;overflow:hidden}
+.win-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.win-bar i{width:10px;height:10px;border-radius:50%;background:var(--line-strong);display:inline-block}
+.addr{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:2px 10px;font-family:var(--f-mono);font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.win-body{padding:20px} .win-body h2{font-size:21px;margin-bottom:4px}
+.step{display:none}.step.on{display:block}
+.field{display:grid;gap:5px;margin-bottom:14px}
+.field label,.lbl{font-size:12px;font-weight:600;color:var(--muted)}
+.input{background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px;width:100%}
+textarea.input{font-family:var(--f-mono);font-size:12px;min-height:90px}
+.row{display:flex;gap:12px;flex-wrap:wrap} .row>*{flex:1 1 200px;min-width:0}
+.seg{justify-self:start;display:inline-flex;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden;flex-wrap:wrap}
+.seg button{border:0;background:var(--surface);padding:7px 14px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0} .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.splitbar{display:flex;height:22px;border-radius:6px;overflow:hidden;margin:8px 0;background:var(--line)}
+.splitbar span{display:grid;place-items:center;font-size:11px;font-weight:600;color:#fff;min-width:0;transition:width .2s}
+.splitbar .e{background:var(--easy)}.splitbar .m{background:var(--med)}.splitbar .h{background:var(--hard)}
+.sl{display:grid;grid-template-columns:70px 1fr 46px;align-items:center;gap:10px;margin:6px 0}
+.sl input[type=range]{width:100%;accent-color:var(--accent)} .sl output{font-variant-numeric:tabular-nums;text-align:right}
+.actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.note{font-size:12px;color:var(--muted)}
+.src{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.src:last-child{border-bottom:0} .src .u{font-family:var(--f-mono);font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.conf{display:flex;gap:3px;align-items:center} .conf i{width:14px;height:6px;border-radius:2px;background:var(--line-strong)} .conf i.f{background:var(--accent)}
+.gap{border:1px solid var(--line);border-radius:var(--r);padding:12px;background:var(--surface-2);margin-top:10px}
+.gap.miss{border-color:var(--warn);background:var(--warn-soft)} .gap h4{font-size:15px;margin-bottom:2px}
+.choices{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.choices label{display:flex;gap:6px;align-items:flex-start;background:var(--surface);color:var(--fg);border:1px solid var(--line-strong);border-radius:8px;padding:7px 10px;cursor:pointer;flex:1 1 190px;font-size:13px}
+.choices input{margin-top:3px;accent-color:var(--accent)} .choices label:has(input:checked){border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:6px} .bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.log{background:#0f1a22;color:#c9d8e2;font-family:var(--f-mono);font-size:12px;border-radius:8px;padding:12px;max-height:260px;overflow:auto;margin-top:14px}
+#rbody{margin-top:14px}
+.log div{white-space:pre-wrap;overflow-wrap:anywhere} .log .g{color:#6fd39a}.log .y{color:#e8bd6a}.log .r{color:#f0786b}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.kpi b{font-family:var(--f-head);font-size:22px;display:block;font-variant-numeric:tabular-nums} .kpi span{font-size:12px;color:var(--muted)}
+.chk{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--surface-2);font-size:13px}
+.perm label,.signoff label{display:flex;gap:8px;align-items:flex-start;padding:6px 0;cursor:pointer}
+.perm input,.signoff input[type=checkbox]{margin-top:3px;accent-color:var(--accent)}
+pre{margin:0;background:#0f1a22;color:#c9d8e2;padding:14px;border-radius:8px;overflow-x:auto;font-family:var(--f-mono);font-size:12px;line-height:1.5;white-space:pre-wrap}
+iframe{width:100%;height:760px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+details.more{margin:6px 0 12px} details.more summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:13px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:14px}
+.sub{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+@media (max-width:560px){.sl{grid-template-columns:56px 1fr 40px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div class="top-in">
+  <div class="brand">
+    <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--accent-ink)"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12l2 2 4-4"/></svg></div>
+    <div><h1>Paper Forge</h1><small>Research · generate · verify · rate · publish drive papers</small></div>
+  </div>
+  <div class="status" id="status"></div>
+</div></header>
+<div id="banners"></div>
+
+<div class="steps" role="tablist" aria-label="Flow steps" id="steps"></div>
+
+<div class="stage">
+  <div class="win">
+    <div class="win-bar"><i></i><i></i><i></i><div class="addr" id="addr">admin / paper-forge / new</div></div>
+    <div class="win-body">
+
+      <!-- 1 BRIEF -->
+      <section class="step on" data-step="0">
+        <h2>New paper</h2>
+        <p class="muted" style="margin-bottom:16px">Type the company and role, how many papers, and how hard. Research, originality rules and the latest pattern are handled for you.</p>
+        <div class="row">
+          <div class="field"><label for="co">Company</label><input class="input" id="co" placeholder="Type a company name, e.g. Infosys" autocomplete="off"></div>
+          <div class="field"><label for="ro">Role</label><input class="input" id="ro" placeholder="Type a role, e.g. Specialist Programmer" autocomplete="off"></div>
+          <div class="field"><label for="np">Papers to generate</label><input class="input" id="np" type="number" min="1" max="10" value="1"></div>
+        </div>
+        <div class="field">
+          <span class="lbl">Difficulty of the paper</span>
+          <div class="seg" id="preset" role="group" aria-label="Difficulty preset">
+            <button type="button" data-p="easy" aria-pressed="false">Easy</button>
+            <button type="button" data-p="medium" aria-pressed="true">Medium</button>
+            <button type="button" data-p="hard" aria-pressed="false">Hard</button>
+            <button type="button" data-p="custom" aria-pressed="false">Custom %</button>
+          </div>
+        </div>
+        <div class="card" style="background:var(--surface-2)">
+          <div class="splitbar" id="splitbar"><span class="e"></span><span class="m"></span><span class="h"></span></div>
+          <div class="sl"><span><i class="dot e"></i>Easy</span><input type="range" id="se" min="0" max="100" value="30" aria-label="Easy percent"><output id="oe">30%</output></div>
+          <div class="sl"><span><i class="dot m"></i>Medium</span><input type="range" id="sm" min="0" max="100" value="50" aria-label="Medium percent"><output id="om">50%</output></div>
+          <div class="sl"><span><i class="dot h"></i>Hard</span><input type="range" id="sh" min="0" max="100" value="20" disabled aria-label="Hard percent (the remainder)"><output id="oh">20%</output></div>
+          <p class="note">Hard is always the remainder so the three add up to 100. Presets fill these sliders; moving a slider switches to Custom.</p>
+        </div>
+        <details class="more"><summary>More options</summary>
+          <div class="row" style="margin-top:10px">
+            <div class="field"><label for="tree">Where the papers go</label>
+              <select class="input" id="tree"><option value="university">University drive (companies/university-exams)</option><option value="placement">Practice catalog (companies)</option></select></div>
+            <div class="field"><label for="rnd">Round key (optional)</label><input class="input" id="rnd" placeholder="default: the company's first online assessment"></div>
+          </div>
+          <div class="perm">
+            <label><input type="checkbox" id="oCoding" checked><span>Include coding problems</span></label>
+            <label><input type="checkbox" id="oMedia" checked><span>Include listening and speaking sections (the dev team makes the audio)</span></label>
+            <label><input type="checkbox" id="oWriting" checked><span>Include writing sections</span></label>
+            <label><input type="checkbox" id="oWeb" checked><span>Check every question on the web (one search each; the biggest cost line)</span></label>
+          </div>
+        </details>
+        <div class="actions"><button class="btn primary" id="startResearch">Start research</button></div>
+      </section>
+
+      <!-- 2 RESEARCH -->
+      <section class="step" data-step="1">
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
+          <div><h2 id="rtitle">Research</h2><p class="muted" id="rsub"></p></div><span id="rstat"></span>
+        </div>
+        <div class="log" id="rlog" hidden></div>
+        <div id="rbody"></div>
+        <div class="actions"><button class="btn" data-go="0">Back</button><button class="btn" id="reresearch" disabled>Research again</button><button class="btn primary" id="toGap" disabled>Continue to gap check</button></div>
+      </section>
+
+      <!-- 3 GAP -->
+      <section class="step" data-step="2">
+        <h2>Gap report and the one discussion</h2>
+        <p class="muted">Everything Paper Forge needs from you is on this screen. After you lock it, the run does not ask again.</p>
+        <div id="gapbody"><p class="muted" style="margin-top:12px">Loading ...</p></div>
+        <div class="actions"><button class="btn" data-go="1">Back</button><button class="btn primary" id="lock" disabled>Lock plan and generate all papers</button></div>
+      </section>
+
+      <!-- 4 RUN -->
+      <section class="step" data-step="3">
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
+          <div><h2 id="runtitle">Generating</h2><p class="muted" id="runsub">Plan locked. No more questions will be asked.</p></div><span id="runstat"></span>
+        </div>
+        <div class="card" style="margin-top:12px;padding:12px 14px">
+          <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>Spend so far</b><span class="mono"><span id="mCost">$0.00</span> <span class="muted" id="mCap"></span></span></div>
+          <div class="bar"><i id="mBar"></i></div>
+          <p class="note" style="margin-top:6px" id="mNow">Waiting to start</p>
+        </div>
+        <div class="log" id="log" aria-live="polite"></div>
+        <div id="runresult"></div>
+        <div class="actions"><button class="btn" data-go="2">Back</button><button class="btn primary" id="toReview" disabled>Review the papers</button></div>
+      </section>
+
+      <!-- 5 REVIEW -->
+      <section class="step" data-step="4">
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
+          <div><h2>Review</h2><p class="muted">Every question with its evidence. Edit marks a question, Generate rewrites it, then download the PDF.</p></div>
+          <select class="input" id="draftSel" style="max-width:340px" aria-label="Draft paper"></select>
+        </div>
+        <div id="audioPanel"></div>
+        <iframe id="rv" title="Review" style="margin-top:12px"></iframe>
+        <div class="actions"><button class="btn" data-go="3">Back to run</button><button class="btn primary" data-go="5">Continue to preview</button></div>
+      </section>
+
+      <!-- 6 PUBLISH -->
+      <section class="step" data-step="5">
+        <h2>Preview and confirm, then open the PR</h2>
+        <p class="muted">The papers are saved on a local branch cut from origin/main. Nothing is pushed and no PR exists until a developer and a tester have seen the papers running in the app, and you allow each step below.</p>
+
+        <div class="card" style="margin-top:14px">
+          <h4 style="margin-bottom:8px">1. Save on a local branch (not pushed)</h4>
+          <div id="pubDrafts" class="perm"></div>
+          <div class="row" style="margin-top:6px">
+            <div class="field"><label for="wt">Separate folder (only if your checkout has uncommitted changes)</label><input class="input" id="wt" placeholder="e.g. C:/work/papers-branch (optional)"></div>
+          </div>
+          <div class="perm">
+            <label><input type="checkbox" id="pCommit"><span>Also commit locally now (not pushed)</span></label>
+            <label><input type="checkbox" id="pMissing"><span>Publish even if audio URLs are still missing (the paper will not play audio until they are filled in)</span></label>
+            <label><input type="checkbox" id="pFlag"><span>Publish even if some questions are flagged "needs a human"</span></label>
+          </div>
+          <div style="margin-top:8px"><button class="btn primary" id="publish">Save on a local branch</button></div>
+          <div id="pubOut"></div>
+        </div>
+
+        <div class="card" style="margin-top:14px" id="signCard">
+          <h4 style="margin-bottom:4px">2. Preview, then sign-off</h4>
+          <p class="note" style="margin-bottom:8px">A developer runs the backend and frontend on the branch. A tester tests the papers. Two different people. If the papers change afterwards, both sign-offs must be given again.</p>
+          <div id="signOut"></div>
+          <div class="grid2">
+            <div class="signoff"><div class="field"><label for="devName">Developer's name</label><input class="input" id="devName"></div>
+              <label><input type="checkbox" id="devOk"><span>I ran the backend and frontend on this branch and confirmed the papers load and work.</span></label>
+              <button class="btn sm" id="signDev">Record developer sign-off</button></div>
+            <div class="signoff"><div class="field"><label for="qaName">Tester's name</label><input class="input" id="qaName"></div>
+              <label><input type="checkbox" id="qaOk"><span>I tested these papers and confirm them.</span></label>
+              <button class="btn sm" id="signQa">Record tester sign-off</button></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <h4 style="margin-bottom:4px">3. Commit, push and open the PR</h4>
+          <p class="note" style="margin-bottom:6px">Needs both sign-offs. Each step is allowed separately. Leave a box unticked and that step and everything after it will not happen.</p>
+          <div class="perm" id="permBox">
+            <label><input type="checkbox" id="aCommit"><span id="aCommitT">Allow committing the papers on the branch</span></label>
+            <label><input type="checkbox" id="aPush"><span id="aPushT">Allow pushing the branch to origin</span></label>
+            <label><input type="checkbox" id="aPr"><span id="aPrT">Allow opening a pull request into main</span></label>
+          </div>
+          <div style="margin-top:8px"><button class="btn primary" id="doPr" disabled>Do the allowed steps</button></div>
+          <div id="prOut"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <aside class="side" id="side"></aside>
+</div>
+</div>
+
+<script>
+(function(){
+  var $=function(s,r){return (r||document).querySelector(s)};
+  var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function usd(x){return '$'+(+x||0).toFixed(2)}
+  function api(path,body){
+    var opt=body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-Paper-Forge':'1'},body:JSON.stringify(body)};
+    return fetch(path,opt).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||r.statusText);return j})});
+  }
+  function fail(el,e){el.innerHTML='<div class="banner bad" style="margin-top:12px">'+esc(e.message||e)+'</div>'}
+
+  var STEPS=[
+    {t:'1 Brief',s:'Company and role',who:'You',addr:'admin / paper-forge / new',side:{what:['Type the company and the role, and how hard the paper should be.','Use Easy, Medium or Hard, or set exact percentages.'],agent:'None yet',out:'A brief the agents work from'}},
+    {t:'2 Research',s:'Confirmed pattern',who:'Researcher · Pattern analyst',addr:'admin / paper-forge / runs / research',side:{what:['Reads public sources for the latest pattern.','Scores confidence per field and flags conflicts.','Only the pattern is kept, never the question text.'],agent:'Researcher (Haiku 5.5 with web search)',out:'Blueprint draft with sources, saved for reuse'}},
+    {t:'3 Gap + discussion',s:'The one conversation',who:'Gap check · You',addr:'admin / paper-forge / runs / plan',side:{what:['Shows which question types we can generate and which we cannot.','You decide developer task, replace or leave out for each gap.','Difficulty counts and the estimated cost are shown before you lock.'],agent:'Gap check (script)',out:'Locked plan. The run asks nothing after this.'}},
+    {t:'4 Run',s:'Generate and verify',who:'AI steps + scripts',addr:'admin / paper-forge / runs / live',side:{what:['The generator writes; scripts and the verifier check originality.','The rater labels each question by the written rules.','A failed question is rewritten up to 3 times.'],agent:'Generator (Opus 5.5), checker (Haiku 5.5), scripts',out:'Verified draft papers'}},
+    {t:'5 Review',s:'Evidence per question',who:'You',addr:'admin / paper-forge / papers / review',side:{what:['Every question is listed with its options, answer and evidence.','Press Edit, pick Easy, Medium or Hard. Press Generate to rewrite the marked ones.','Fill in audio URLs from the dev team, then download the PDF.'],agent:'Claude rewrites only the questions you changed.',out:'Approved paper set and a PDF'}},
+    {t:'6 Preview + PR',s:'Confirm, then PR',who:'Developer · Tester',addr:'admin / paper-forge / papers / preview',side:{what:['Saves the papers on a fresh local branch. Nothing is pushed.','A developer runs the backend and frontend on that branch; a tester tests.','Both sign off, then you allow commit, push and PR one by one.'],agent:'Scripts save the branch. People do the confirming.',out:'Open PR, not merged'}}
+  ];
+  var S={cur:0,E:30,M:50,H:20,missing:'dev',keys:[],pattern:null,gap:null,busy:false,done:{}};
+  var PRESETS={easy:[60,30],medium:[30,50],hard:[10,40]};
+
+  /* ---------- chrome ---------- */
+  function renderSide(i){
+    var s=STEPS[i].side;
+    $('#side').innerHTML='<div class="card"><h4>What happens</h4><ul>'+s.what.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul></div>'+
+      (i===0?'':'<div class="card"><h4>Agent</h4><p class="muted">'+esc(s.agent)+'</p></div><div class="card"><h4>Result</h4><p class="muted">'+esc(s.out)+'</p></div>');
+  }
+  function go(i){
+    S.cur=i;
+    $$('.step').forEach(function(x){x.classList.toggle('on',+x.dataset.step===i)});
+    $$('#steps button').forEach(function(b,k){b.setAttribute('aria-selected',String(k===i));b.classList.toggle('done',!!S.done[k]&&k!==i)});
+    $('#addr').textContent=STEPS[i].addr;
+    renderSide(i);
+    if(i===2)loadGap();
+    if(i===4)openReview();
+    if(i===5)openPublish();
+  }
+  $('#steps').innerHTML=STEPS.map(function(s,i){return '<button role="tab" data-i="'+i+'" aria-selected="'+(i===0)+'"><b>'+s.t+'</b><span>'+s.s+'</span><br><span class="who">'+s.who+'</span></button>'}).join('');
+  $$('#steps button').forEach(function(b){b.addEventListener('click',function(){go(+b.dataset.i)})});
+  $$('[data-go]').forEach(function(b){b.addEventListener('click',function(){go(+b.dataset.go)})});
+
+  function refreshStatus(){
+    return api('/api/app').then(function(a){
+      S.app=a;
+      $('#status').innerHTML=(a.hasKey?'<span class="pill ok">API key set</span>':'<span class="pill bad">No API key</span>')+
+        '<span class="pill mute">Spent '+usd(a.spentUsd)+' of '+usd(a.capUsd)+'</span>';
+      var b='';
+      if(!a.hasKey)b+='<div class="banner bad">ANTHROPIC_API_KEY is not set, so research and generation cannot run. Set it, then restart this app. (Setup is in the README.)</div>';
+      if(a.needsWorkspaceId)b+='<div class="banner bad">Your key is a user key, not tied to a workspace. Set ANTHROPIC_WORKSPACE_ID (the workspace id from the Console) or create the key inside a workspace, then restart this app.</div>';
+      if(!a.repoOk)b+='<div class="banner">The content repo folder was not found: '+esc(a.repo)+'. Fix [paths] repo in forge.local.toml.</div>';
+      $('#banners').innerHTML=b;
+      var cost=$('#mCap');if(cost)cost.textContent='of '+usd(a.capUsd)+' cap';
+    }).catch(function(){});
+  }
+
+  /* ---------- 1 brief ---------- */
+  function setBar(el,e,m,h){var sp=el.children;[e,m,h].forEach(function(v,i){sp[i].style.width=v+'%';sp[i].textContent=v>=8?v+'%':''})}
+  function drawSplit(){
+    S.H=100-S.E-S.M;
+    $('#oe').textContent=S.E+'%';$('#om').textContent=S.M+'%';$('#oh').textContent=S.H+'%';$('#sh').value=S.H;
+    setBar($('#splitbar'),S.E,S.M,S.H);
+  }
+  function setPreset(p){
+    $$('#preset button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.p===p))});
+    if(PRESETS[p]){S.E=PRESETS[p][0];S.M=PRESETS[p][1];$('#se').value=S.E;$('#sm').value=S.M}
+    drawSplit();
+  }
+  $$('#preset button').forEach(function(b){b.addEventListener('click',function(){setPreset(b.dataset.p)})});
+  $('#se').addEventListener('input',function(){S.E=+this.value;if(S.E+S.M>100){S.M=100-S.E;$('#sm').value=S.M}setPreset('custom')});
+  $('#sm').addEventListener('input',function(){S.M=+this.value;if(S.E+S.M>100){S.E=100-S.M;$('#se').value=S.E}setPreset('custom')});
+  function brief(){
+    return {company:$('#co').value.trim(),role:$('#ro').value.trim(),papers:Math.max(1,Math.min(10,+$('#np').value||1)),
+      split:S.E+'/'+S.M+'/'+S.H,tree:$('#tree').value,round:$('#rnd').value.trim(),coding:$('#oCoding').checked,
+      media:$('#oMedia').checked,writing:$('#oWriting').checked,web:$('#oWeb').checked};
+  }
+  try{var sv=JSON.parse(localStorage.getItem('pf-brief')||'{}');if(sv.company)$('#co').value=sv.company;if(sv.role)$('#ro').value=sv.role}catch(e){}
+  $('#startResearch').addEventListener('click',function(){
+    var b=brief();
+    if(!b.company||!b.role){alert_('Type both a company and a role first.');return}
+    try{localStorage.setItem('pf-brief',JSON.stringify({company:b.company,role:b.role}))}catch(e){}
+    go(1);startResearch(false);
+  });
+  function alert_(m){$('#banners').innerHTML='<div class="banner">'+esc(m)+'</div>'}
+
+  /* ---------- jobs ---------- */
+  function pollJob(id,logEl,onDone,spend){
+    var since=0,timer=null;
+    function tick(){
+      api('/api/job?id='+id+'&since='+since).then(function(j){
+        j.lines.forEach(function(l){var d=document.createElement('div');d.textContent=l;
+          if(/FAIL|failed|needs a human/i.test(l))d.className='y';else if(/saved out|PASS|^Found/i.test(l.trim()))d.className='g';logEl.appendChild(d)});
+        since=j.total;logEl.scrollTop=logEl.scrollHeight;
+        if(spend)spend(j);
+        if(j.status==='running'){timer=setTimeout(tick,1000)}else{refreshStatus();onDone(j)}
+      }).catch(function(e){onDone({status:'error',error:e.message,lines:[]})});
+    }
+    tick();
+  }
+
+  /* ---------- 2 research ---------- */
+  function conf(c){var n={high:3,medium:2,low:1}[c]||0;return '<span class="conf" title="'+esc(c||'unknown')+'">'+[1,2,3].map(function(k){return '<i class="'+(k<=n?'f':'')+'"></i>'}).join('')+'</span>'}
+  function showPattern(p){
+    S.pattern=p;
+    var rows=p.sections.map(function(s){return '<tr><td>'+esc(s.name)+'</td><td class="mono">'+esc(s.type)+(s.mode?' · '+esc(s.mode):'')+'</td><td class="num">'+esc(s.questions)+'</td><td class="num">'+esc(s.minutes==null?'-':s.minutes)+'</td><td class="muted">'+esc((s.topics||[]).join(', '))+'</td><td>'+conf(s.confidence)+'</td></tr>'}).join('');
+    var h='<div class="kpis"><div class="kpi"><b>'+p.sections.length+'</b><span>Sections</span></div><div class="kpi"><b>'+p.sections.reduce(function(a,s){return a+(+s.questions||0)},0)+'</b><span>Questions in the real test</span></div><div class="kpi"><b>'+esc(p.totalMinutes==null?'?':p.totalMinutes)+'</b><span>Minutes</span></div><div class="kpi"><b>'+(p.sources||[]).length+'</b><span>Sources read</span></div></div>'+
+      '<div class="tablewrap"><table><thead><tr><th>Section</th><th>Type</th><th class="num">Qs</th><th class="num">Min</th><th>Topics</th><th>Confidence</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+      (p.negativeMarking?'<p class="note" style="margin-top:8px">Marking: '+esc(p.negativeMarking)+'</p>':'');
+    if((p.conflicts||[]).length)h+='<div class="gap miss"><h4>Sources disagree</h4><ul style="margin:6px 0 0;padding-left:18px">'+p.conflicts.map(function(c){return '<li>'+esc(c)+'</li>'}).join('')+'</ul><p class="note" style="margin-top:6px">Decide on the next screen; unconfirmed fields are treated cautiously.</p></div>';
+    if((p.problems||[]).length)h+='<div class="gap miss"><h4>Check before trusting</h4><ul style="margin:6px 0 0;padding-left:18px">'+p.problems.map(function(c){return '<li>'+esc(c)+'</li>'}).join('')+'</ul></div>';
+    h+='<h4 style="margin:16px 0 4px">Sources</h4><div>'+((p.sources||[]).map(function(s){return '<div class="src"><div><b>'+esc(s.title||'')+'</b><div class="u">'+esc(s.url||'')+'</div></div><span class="note">'+esc(s.date||'')+'</span></div>'}).join('')||'<p class="muted">No sources listed.</p>')+'</div>';
+    $('#rbody').innerHTML=h;
+    $('#rtitle').textContent='Research: '+p.company+', '+p.role;
+    $('#rsub').textContent=(p.fetchedAt?'Saved '+p.fetchedAt+'. ':'')+'The confirmed pattern. Only the pattern is kept, never question text.';
+    $('#rstat').innerHTML='<span class="pill ok">Pattern ready</span>';
+    S.done[1]=true;$('#toGap').disabled=false;$('#reresearch').disabled=false;
+  }
+  function startResearch(refresh){
+    var b=brief();
+    $('#rbody').innerHTML='';$('#toGap').disabled=true;$('#reresearch').disabled=true;
+    var log=$('#rlog');log.innerHTML='';
+    $('#rtitle').textContent='Research: '+b.company+', '+b.role;$('#rsub').textContent='';
+    $('#rstat').innerHTML='<span class="pill info">Working</span>';
+    var useCache=!refresh?api('/api/gap?company='+encodeURIComponent(b.company)+'&role='+encodeURIComponent(b.role)).then(function(g){return g.pattern}).catch(function(){return null}):Promise.resolve(null);
+    useCache.then(function(p){
+      if(p){log.hidden=true;showPattern(p);return}
+      log.hidden=false;
+      api('/api/research',{company:b.company,role:b.role,refresh:refresh}).then(function(r){
+        pollJob(r.job,log,function(j){
+          if(j.status==='error'){$('#rstat').innerHTML='<span class="pill bad">Failed</span>';fail($('#rbody'),j.error);$('#reresearch').disabled=false;return}
+          showPattern(j.result);
+        });
+      }).catch(function(e){$('#rstat').innerHTML='<span class="pill bad">Failed</span>';fail($('#rbody'),e);$('#reresearch').disabled=false});
+    });
+  }
+  $('#reresearch').addEventListener('click',function(){startResearch(true)});
+  $('#toGap').addEventListener('click',function(){go(2)});
+
+  /* ---------- 3 gap ---------- */
+  var gapTimer=null;
+  function gapUrl(){var b=brief();return '/api/gap?company='+encodeURIComponent(b.company)+'&role='+encodeURIComponent(b.role)+'&split='+b.split+'&missing='+S.missing+'&papers='+b.papers+'&coding='+(b.coding?1:0)+'&media='+(b.media?1:0)+'&writing='+(b.writing?1:0)+'&web='+(b.web?1:0)}
+  function loadGap(){
+    api(gapUrl()).then(renderGap).catch(function(e){fail($('#gapbody'),e);$('#lock').disabled=true});
+  }
+  function unitName(u){return {mcq:'MCQ questions',coding:'Coding problems',recording:'Listening recordings',speaking:'Speaking items',writing:'Writing tasks'}[u]||u}
+  function renderGap(g){
+    S.gap=g;var r=g.report,b=brief(),es=g.estimate;
+    var h='<h4 style="margin:16px 0 6px;font-size:14px">Question types in this pattern</h4><div class="tablewrap"><table><thead><tr><th>Section</th><th>Type</th><th class="num">Qs</th><th>Status</th><th>Where it is built</th></tr></thead><tbody>'+
+      r.rows.map(function(x){return '<tr><td>'+esc(x.section)+'</td><td class="mono">'+esc(x.type)+'</td><td class="num">'+x.questions+'</td><td>'+(x.supported?'<span class="pill ok">Supported</span>':'<span class="pill warn">Missing</span>')+'</td><td class="muted">'+esc(x.where)+'</td></tr>'}).join('')+'</tbody></table></div>'+
+      '<p class="note" style="margin-top:6px">'+r.supported_questions+' of '+r.total_questions+' questions can be generated today.</p>';
+    r.missing.forEach(function(m){
+      if(m.type==='MCQ_IMAGE'){
+        h+='<div class="gap miss"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div><h4>'+esc(m.section)+' (images)</h4><p class="note" style="color:inherit">Not supported today: '+esc(m.where)+'.</p></div><span class="pill warn">Missing · '+m.questions+' Qs</span></div>'+
+        '<div class="choices" id="missingChoices">'+[['dev','Developer task','Write the questions and image briefs as content plus a task note. The section goes live when developers add image support.'],['replace','Use closest type','Replace with text pattern-series MCQs.'],['drop','Leave out','Paper ships without this section.']].map(function(c){return '<label><input type="radio" name="miss" value="'+c[0]+'"'+(S.missing===c[0]?' checked':'')+'><span><b>'+c[1]+'</b><br>'+c[2]+'</span></label>'}).join('')+'</div></div>';
+      }else h+='<div class="gap miss"><h4>'+esc(m.section)+' ('+esc(m.type)+')</h4><p class="note" style="color:inherit">Not supported by the platform. This section is left out.</p></div>';
+    });
+    h+='<div class="card" style="margin-top:14px;background:var(--surface-2)"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><h4 style="font-size:14px">Difficulty plan, from your split</h4><span class="mono">Easy '+S.E+' · Medium '+S.M+' · Hard '+S.H+'</span></div><div class="tablewrap" style="margin-top:8px;background:var(--surface)"><table><thead><tr><th>Section</th><th class="num">Qs</th><th class="num">Easy</th><th class="num">Medium</th><th class="num">Hard</th></tr></thead><tbody>'+
+      g.plan.map(function(p){return '<tr><td>'+esc(p.section)+'</td><td class="num">'+p.questions+'</td><td class="num">'+p.easy+'</td><td class="num">'+p.medium+'</td><td class="num">'+p.hard+'</td></tr>'}).join('')+
+      '<tr><td><b>Paper total</b></td><td class="num"><b>'+g.plan.reduce(function(a,p){return a+p.questions},0)+'</b></td><td class="num"><b>'+g.plan.reduce(function(a,p){return a+p.easy},0)+'</b></td><td class="num"><b>'+g.plan.reduce(function(a,p){return a+p.medium},0)+'</b></td><td class="num"><b>'+g.plan.reduce(function(a,p){return a+p.hard},0)+'</b></td></tr></tbody></table></div><p class="note" style="margin-top:6px">Counts use largest remainder so each section adds up exactly. Sections of types not built yet are listed above but not generated.</p></div>';
+    h+='<div class="card" style="margin-top:14px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><h4 style="font-size:14px">Estimated cost of this run</h4><span>'+(es.overCap?'<span class="pill bad">'+usd(es.totalUsd)+' is over the '+usd(es.capUsd)+' cap</span>':'<span class="pill ok">'+usd(es.totalUsd)+' of '+usd(es.capUsd)+' cap</span>')+'</span></div>'+
+      '<p class="note" style="margin:4px 0 8px"><b>Cost here means Claude tokens</b> (text read and written) <b>plus web searches</b>. Nothing is charged per student. '+esc(es.note)+'</p>'+
+      '<div class="tablewrap"><table><thead><tr><th>Per paper</th><th class="num">Items</th><th class="num">Est. cost</th></tr></thead><tbody>'+es.lines.map(function(l){return '<tr><td>'+unitName(l.unit)+'</td><td class="num">'+l.count+'</td><td class="num">'+usd(l.usd)+'</td></tr>'}).join('')+'<tr><td colspan="2"><b>One paper</b></td><td class="num"><b>'+usd(es.perPaperUsd)+'</b></td></tr><tr><td colspan="2"><b>'+es.papers+' paper(s), about '+es.searches+' web searches</b></td><td class="num"><b>'+usd(es.totalUsd)+'</b></td></tr></tbody></table></div>'+
+      '<p class="note" style="margin-top:6px">'+(es.researchUsdAlreadySpent?'Research is already saved, so it costs nothing again.':'Research for this company and role is not saved yet (about '+usd(es.researchUsd)+').')+'</p>'+
+      '<div class="row" style="margin-top:10px;align-items:end"><div class="field" style="margin:0"><label for="cap">Spending cap for this session (USD)</label><input class="input" id="cap" type="number" min="1" value="'+es.capUsd+'"></div><p class="note">At the cap the run stops, saves finished work and shows what is left. It does not keep spending.</p></div></div>';
+    h+='<div class="card" style="margin-top:14px;border-color:var(--accent)"><h4 style="font-size:14px;margin-bottom:6px">What the run will do</h4><p class="muted">Generate '+b.papers+' paper(s) for '+esc(b.company)+', '+esc(b.role)+'. Difficulty '+S.E+' / '+S.M+' / '+S.H+'. '+
+      [g.counts.mcq?'MCQ sections':null,g.counts.coding?g.counts.coding+' coding problem(s)':null,(g.counts.recording+g.counts.speaking)?'listening and speaking':null,g.counts.writing?'writing':null].filter(Boolean).join(', ')+'. Every item is originality-checked'+(b.web?' (repo and web)':' (repo only)')+' and rated by difficulty, then saved as a draft for you to review.</p></div>';
+    $('#gapbody').innerHTML=h;
+    $$('input[name=miss]').forEach(function(x){x.addEventListener('change',function(){S.missing=x.value;loadGap()})});
+    var cap=$('#cap');if(cap)cap.addEventListener('change',function(){api('/api/cap',{usd:+cap.value}).then(function(){refreshStatus();loadGap()}).catch(function(e){alert_(e.message)})});
+    S.done[2]=true;$('#lock').disabled=false;
+  }
+  $$('#oCoding,#oMedia,#oWriting,#oWeb,#np').forEach(function(x){x.addEventListener('change',function(){if(S.cur===2)loadGap()})});
+
+  /* ---------- 4 run ---------- */
+  $('#lock').addEventListener('click',function(){
+    var b=brief(),capEl=$('#cap');
+    var body={company:b.company,role:b.role,papers:b.papers,split:b.split,missing:S.missing,web:b.web,coding:b.coding,media:b.media,writing:b.writing,tree:b.tree,round:b.round};
+    if(capEl)body.capUsd=+capEl.value;
+    $('#lock').disabled=true;
+    api('/api/run',body).then(function(r){
+      go(3);S.done[2]=true;
+      $('#log').innerHTML='';$('#runresult').innerHTML='';$('#toReview').disabled=true;
+      $('#runstat').innerHTML='<span class="pill info">Running</span>';$('#runtitle').textContent='Generating '+b.papers+' paper(s)';
+      pollJob(r.job,$('#log'),function(j){
+        if(j.status==='error'){$('#runstat').innerHTML='<span class="pill bad">Stopped</span>';fail($('#runresult'),j.error);$('#runsub').textContent='Finished work is saved in out/. Fix the problem and run again.';
+          api('/api/drafts').then(function(d){S.keys=d.drafts;$('#toReview').disabled=!d.drafts.length});return}
+        S.keys=j.result.keys;S.done[3]=true;
+        $('#runstat').innerHTML='<span class="pill ok">Done</span>';
+        $('#runresult').innerHTML='<div class="card" style="margin-top:12px;border-color:var(--ok);background:var(--ok-soft)"><b>'+j.result.keys.length+' draft paper(s) saved</b><div class="mono" style="margin-top:4px">'+j.result.keys.map(esc).join('<br>')+'</div>'+(j.result.needsHuman.some(function(n){return n>0})?'<p class="note" style="margin-top:6px">Some questions are flagged "needs a human". They were left out of the paper; see the review screen.</p>':'')+'</div>';
+        $('#toReview').disabled=false;$('#mNow').textContent='Finished';$('#mBar').style.width='100%';
+      },function(j){
+        $('#mCost').textContent=usd(j.spentUsd);var cap=S.app?S.app.capUsd:15;$('#mBar').style.width=Math.min(100,j.spentUsd/cap*100)+'%';
+        var last=j.lines.length?j.lines[j.lines.length-1]:null;if(last)$('#mNow').textContent=last.trim().slice(0,120);
+      });
+    }).catch(function(e){go(3);fail($('#runresult'),e);$('#lock').disabled=false});
+  });
+  $('#toReview').addEventListener('click',function(){go(4)});
+
+  /* ---------- 5 review ---------- */
+  function openReview(){
+    api('/api/drafts').then(function(d){
+      var keys=d.drafts;S.keys=S.keys.length?S.keys.filter(function(k){return keys.indexOf(k)>=0}):keys;
+      $('#draftSel').innerHTML=keys.map(function(k){return '<option'+(S.keys.indexOf(k)>=0&&k===S.keys[0]?' selected':'')+'>'+esc(k)+'</option>'}).join('');
+      if(!keys.length){$('#rv').removeAttribute('src');$('#audioPanel').innerHTML='<div class="banner">No drafts yet. Run the generator first.</div>';return}
+      showDraft($('#draftSel').value);
+    });
+  }
+  function showDraft(k){
+    $('#rv').src='/review?key='+encodeURIComponent(k)+'&embed=1';
+    api('/api/paper?key='+encodeURIComponent(k)).then(function(v){
+      var f=v.audioFiles||[];
+      if(!f.length){$('#audioPanel').innerHTML='';return}
+      var pending=f.filter(function(x){return !x.url}).length;
+      $('#audioPanel').innerHTML='<div class="card" style="margin-top:12px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><h4>Audio from the dev team</h4><span class="pill '+(pending?'warn':'ok')+'">'+(pending?pending+' of '+f.length+' still null':'All URLs filled in')+'</span></div>'+
+        '<p class="note" style="margin:4px 0 8px">The dev team records the audio from the exact text in <span class="mono">out/audio/'+esc(k)+'/</span>, uploads it to Wasabi and sends the URLs. Paste them here, one per line as <span class="mono">file-name URL</span> (or a JSON object). They replace the nulls in the paper.</p>'+
+        '<div class="tablewrap"><table><thead><tr><th>File</th><th>Kind</th><th>URL</th></tr></thead><tbody>'+f.map(function(x){return '<tr><td class="mono">'+esc(x.file)+'</td><td>'+esc(x.kind)+'</td><td class="mono">'+(x.url?esc(x.url):'<span class="pill warn">null</span>')+'</td></tr>'}).join('')+'</tbody></table></div>'+
+        '<textarea class="input" id="audioText" placeholder="'+esc(f[0].file)+' https://...wasabisys.com/...mp3" style="margin-top:8px"></textarea><div style="margin-top:6px"><button class="btn sm primary" id="audioGo">Fill in the URLs</button></div><div id="audioOut"></div></div>';
+      $('#audioGo').addEventListener('click',function(){
+        api('/api/audio',{key:k,text:$('#audioText').value}).then(function(r){showDraft(k);$('#audioOut').innerHTML='<p class="note" style="margin-top:6px">Filled in '+r.result.applied.length+' URL(s).</p>'}).catch(function(e){fail($('#audioOut'),e)});
+      });
+    }).catch(function(){});
+  }
+  $('#draftSel').addEventListener('change',function(){showDraft(this.value)});
+
+  /* ---------- 6 publish ---------- */
+  function openPublish(){
+    api('/api/drafts').then(function(d){
+      $('#pubDrafts').innerHTML=d.drafts.length?d.drafts.map(function(k){return '<label><input type="checkbox" class="pk" value="'+esc(k)+'"'+(S.keys.indexOf(k)>=0?' checked':'')+'><span class="mono">'+esc(k)+'</span></label>'}).join(''):'<p class="muted">No drafts yet.</p>';
+    });
+    loadState();
+  }
+  $('#publish').addEventListener('click',function(){
+    var keys=$$('.pk').filter(function(x){return x.checked}).map(function(x){return x.value});
+    if(!keys.length){fail($('#pubOut'),'Tick at least one draft.');return}
+    $('#publish').disabled=true;$('#pubOut').innerHTML='<p class="note" style="margin-top:8px">Fetching origin/main and saving the branch ...</p>';
+    api('/api/publish',{keys:keys,worktree:$('#wt').value.trim()||null,commit:$('#pCommit').checked,allowMissingAudio:$('#pMissing').checked,allowFlagged:$('#pFlag').checked}).then(function(r){
+      S.done[5]=false;
+      $('#pubOut').innerHTML='<div class="card" style="margin-top:10px;border-color:var(--ok);background:var(--ok-soft)"><b>Saved on local branch <span class="mono">'+esc(r.result.branch)+'</span></b> (not pushed, no PR)<p class="note" style="margin-top:4px">Staged: <span class="mono">'+esc(r.result.paths.join(', '))+'</span>'+(r.result.committed?'':' · not committed')+'</p></div>'+
+        '<h4 style="margin:12px 0 6px;font-size:14px">Preview in the real app (developer)</h4><pre>'+esc(r.preview.trim())+'</pre>';
+      loadState();
+    }).catch(function(e){fail($('#pubOut'),e)}).then(function(){$('#publish').disabled=false});
+  });
+  function loadState(){
+    api('/api/publish-state?ref=latest').then(function(s){
+      var rec=s.record;S.rec=rec;
+      if(!rec){$('#signOut').innerHTML='<p class="note">Save a local branch first (step 1).</p>';$('#doPr').disabled=true;return}
+      var st=s.status;
+      $('#signOut').innerHTML='<div class="kpis"><div class="kpi"><b style="font-size:15px">'+esc(rec.branch)+'</b><span>Branch (checked out: '+esc(st.checkedOut||'?')+')</span></div><div class="kpi"><b style="font-size:15px">'+esc(st.signoffs.developer||'not yet')+'</b><span>Developer</span></div><div class="kpi"><b style="font-size:15px">'+esc(st.signoffs.tester||'not yet')+'</b><span>Tester</span></div><div class="kpi"><b style="font-size:15px">'+(rec.prUrl?'opened':'not opened')+'</b><span>PR</span></div></div>'+
+        (st.blockers.length?'<p class="note">Still needed: '+esc(st.blockers.join('; '))+'</p>':'<p class="pill ok">Both sign-offs recorded. Ready for a PR.</p>');
+      $('#aCommitT').textContent='Allow committing the papers on '+rec.branch;$('#aPushT').textContent='Allow running: git push -u origin '+rec.branch;$('#aPrT').textContent='Allow opening a pull request from '+rec.branch+' into main';
+      $('#doPr').disabled=st.blockers.length>0;
+    });
+  }
+  function sign(role,nameId,okId){
+    var name=$(nameId).value.trim();
+    if(!$(okId).checked){fail($('#signOut'),'Tick the confirmation first. Only sign off after you really did it.');return}
+    api('/api/signoff',{ref:'latest',role:role,name:name,confirm:true}).then(loadState).catch(function(e){fail($('#signOut'),e)});
+  }
+  $('#signDev').addEventListener('click',function(){sign('developer','#devName','#devOk')});
+  $('#signQa').addEventListener('click',function(){sign('tester','#qaName','#qaOk')});
+  $('#doPr').addEventListener('click',function(){
+    var allow=[['commit','#aCommit'],['push','#aPush'],['pr','#aPr']].filter(function(x){return $(x[1]).checked}).map(function(x){return x[0]});
+    if(!allow.length){fail($('#prOut'),'Nothing is allowed yet. Tick the steps you want done.');return}
+    $('#doPr').disabled=true;
+    api('/api/pr',{ref:'latest',allow:allow}).then(function(r){
+      var h='<pre style="margin-top:10px">'+esc((r.lines||[]).join('\n'))+'</pre>';
+      if(r.stopped)h+='<div class="banner" style="margin-top:8px">'+esc(r.stopped)+'</div>';
+      if(r.done)h+='<div class="card" style="margin-top:8px;border-color:var(--ok);background:var(--ok-soft)"><b>Done.</b> committed: '+r.done.committed+' · pushed: '+r.done.pushed+(r.done.prUrl?'<br>PR: <a href="'+esc(r.done.prUrl)+'" target="_blank" rel="noopener">'+esc(r.done.prUrl)+'</a>':'')+'<p class="note" style="margin-top:4px">Nothing is merged automatically.</p></div>';
+      $('#prOut').innerHTML=h;S.done[5]=!!(r.done&&r.done.prUrl);loadState();
+    }).catch(function(e){fail($('#prOut'),e)}).then(function(){$('#doPr').disabled=false});
+  });
+
+  setPreset('medium');renderSide(0);refreshStatus();
+  setInterval(refreshStatus,15000);
+})();
+</script>
+</body>
+</html>

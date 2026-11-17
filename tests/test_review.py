@@ -94,12 +94,13 @@ def test_http_flow(draft):
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     base = f"http://127.0.0.1:{srv.server_address[1]}"
     try:
-        assert b"Paper Forge review" in urllib.request.urlopen(base + "/").read()
+        assert b"Paper Forge review" in urllib.request.urlopen(base + "/review").read()
+        assert b"New paper" in urllib.request.urlopen(base + "/").read()
         assert json.load(urllib.request.urlopen(base + "/api/drafts"))["drafts"] == [key]
         v = json.load(urllib.request.urlopen(f"{base}/api/paper?key={key}"))
         qk = v["sections"][0]["questions"][0]["questionKey"]
         req = urllib.request.Request(base + "/api/generate", json.dumps({"key": key, "changes": {qk: "Easy"}}).encode(),
-                                     {"Content-Type": "application/json"})
+                                     {"Content-Type": "application/json", "X-Paper-Forge": "1"})
         out = json.load(urllib.request.urlopen(req))
         assert out["results"][0]["ok"] and out["view"]["delivered"]["Easy"] == 1
         pdf = urllib.request.urlopen(f"{base}/api/pdf?key={key}")

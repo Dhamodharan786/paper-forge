@@ -7,10 +7,21 @@ Researches a company's latest exam pattern, reports what we can and cannot gener
 > API. It writes papers in the format of a `fluentedge-coding-problems` content repo (see `paper_forge/layout.py` and
 > `assemble.py`); to use it on another content repo, adapt those modules. Contributions welcome: see CONTRIBUTING.md.
 
+## The web app (easiest way to use it)
+```
+python -m paper_forge app
+```
+Opens http://127.0.0.1:8765 in your browser with the whole flow: type a company and role, research the pattern, the one
+discussion (gaps and difficulty, with a cost estimate and spending cap), the live run, review and edit, then save a branch,
+record the developer and tester sign-offs, and allow commit, push and PR one step at a time. It runs on your own machine only
+(127.0.0.1) and checks every request, so another web page cannot drive it. Everything below is the same flow from the terminal.
+
 ## Setup (once)
 1. Python 3.12: `winget install Python.Python.3.12`
 2. `python -m venv .venv` then `.venv\Scripts\pip install -r requirements.txt`
-3. Set `ANTHROPIC_API_KEY` (own key, billed to Anthropic).
+3. Set `ANTHROPIC_API_KEY` (own key, billed to Anthropic). A key made for a *user* (`sk-ant-usr-...`) is not tied to a
+   workspace, so also set `ANTHROPIC_WORKSPACE_ID` to the workspace id (or create the key inside a workspace). `doctor` and the
+   app both warn about this.
 4. Check `forge.toml` (repo path, models, prices, spending cap).
 5. `.venv\Scripts\python -m paper_forge doctor`
 

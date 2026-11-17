@@ -145,7 +145,7 @@ details.q>summary::-webkit-details-marker{display:none}
           (ed?'<div style="margin-top:8px"><button data-edit="'+esc(q.questionKey)+'">Edit</button></div>':'')+
           (ed?'<div class="editor" data-ed="'+esc(q.questionKey)+'" hidden><b>Change difficulty</b><div style="margin-top:6px">'+
           ['Easy','Medium','Hard'].map(function(l){return '<label><input type="radio" name="lv-'+esc(q.questionKey)+'" value="'+l+'"'+((pend||q.complexity)===l?' checked':'')+'> '+l+(l===q.complexity?' (current)':'')+'</label>'}).join('')+
-          '</div><div class="muted" style="font-size:13px;margin-top:6px">Choosing a level only marks it. The question is rewritten at that level when you press Generate.</div></div>'+
+          '</div><div class="muted" style="font-size:13px;margin-top:6px">Choosing a level only marks it. The question is rewritten at that level when you press Generate.</div></div>':'')+
           evidence(q)+'</div></details>';
       }).join('');
     }).join('');
@@ -172,7 +172,7 @@ details.q>summary::-webkit-details-marker{display:none}
   }
   $('#gen').addEventListener('click',function(){
     if(busy)return; busy=true; upd();
-    api('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:cur.key,changes:pending})})
+    api('/api/generate',{method:'POST',headers:{'Content-Type':'application/json','X-Paper-Forge':'1'},body:JSON.stringify({key:cur.key,changes:pending})})
     .then(function(r){
       pending={}; busy=false; render(r.view);
       $('#result').innerHTML='<div class="card"><b>Done.</b> Spent '+usd(r.spentUsd)+' this time, '+usd(r.sessionSpentUsd)+' this session.<div class="msg" style="margin-top:6px">'+
@@ -183,8 +183,11 @@ details.q>summary::-webkit-details-marker{display:none}
   $('#draft').addEventListener('change',function(){load(this.value)});
   api('/api/drafts').then(function(d){
     if(!d.drafts.length){$('#empty').hidden=false;$('#draft').hidden=true;return}
-    $('#draft').innerHTML=d.drafts.map(function(k){return '<option>'+esc(k)+'</option>'}).join('');
-    load(d.drafts[0]);
+    var want=new URLSearchParams(location.search).get('key');
+    var first=(want&&d.drafts.indexOf(want)>=0)?want:d.drafts[0];
+    $('#draft').innerHTML=d.drafts.map(function(k){return '<option'+(k===first?' selected':'')+'>'+esc(k)+'</option>'}).join('');
+    if(new URLSearchParams(location.search).get('embed')){document.querySelector('h1').hidden=true;$('#draft').hidden=true}
+    load(first);
   });
 })();
 </script>
