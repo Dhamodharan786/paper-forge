@@ -1,0 +1,12 @@
+{
+  "company": "ExampleCo", "role": "Software Engineer", "year_or_date_seen": "2026",
+  "sections": [
+    {"name": "Quantitative aptitude", "type": "MCQ_TEXT", "questions": 10, "minutes": 10, "topics": ["percentages"], "difficulty_note": null, "confidence": "high"},
+    {"name": "Pseudocode", "type": "MCQ_CODE_OUTPUT", "questions": 5, "minutes": 10, "topics": [], "difficulty_note": null, "confidence": "medium"},
+    {"name": "Figure reasoning", "type": "MCQ_IMAGE", "questions": 5, "minutes": 5, "topics": [], "difficulty_note": null, "confidence": "low"},
+    {"name": "Coding", "type": "CODING", "questions": 2, "minutes": 60, "topics": [], "difficulty_note": null, "confidence": "high"}
+  ],
+  "total_minutes": 85, "negative_marking": null,
+  "sources": [{"url": "https://example.com/a", "title": "A", "date": null}],
+  "conflicts": [], "notes": ""
+}

@@ -1,0 +1,4 @@
+anthropic>=1.0
+pytest>=8
+reportlab>=4
+pypdf>=5

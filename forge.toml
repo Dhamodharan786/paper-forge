@@ -1,0 +1,39 @@
+# Paper Forge settings. Edit here, not in code.
+
+[paths]
+# The repo that papers are saved into (on a local branch, never pushed by the tool).
+# Put your own path in forge.local.toml (not committed) so this file stays machine-neutral.
+repo = "C:/path/to/fluentedge-coding-problems"
+
+[models]
+# Claude only. No GPT anywhere.
+research  = "claude-haiku-5-5"   # reads the web, extracts the pattern
+checker   = "claude-haiku-5-5"   # originality check and difficulty rating (M2)
+generator = "claude-opus-5-5"    # writes and rewrites questions (M2)
+
+[search]
+# Haiku 5.5 is not on the list for the newer dynamic-filtering search tool,
+# so the basic one is the default. Change if you switch the research model.
+tool_type = "web_search_20250305"
+max_uses  = 8
+
+[originality]
+repo_fail = 0.55     # similarity (0 to 1) with any question already in the repo that fails a question
+web_check = true     # one web search per question (the biggest cost line). false = repo checks only
+
+[generate]
+max_attempts = 3     # rewrites per question before it is flagged for a human
+chunk = 10           # questions written per call
+
+[limits]
+spend_cap_usd = 15.0
+
+[prices]
+# USD per million tokens. From Anthropic's model table (cached 2026-11-03).
+# Confirm against the live pricing page before relying on totals.
+# Haiku 5.5 price applies to prompts up to 100K tokens.
+"claude-opus-5-5"  = { input = 4.0, output = 20.0 }
+"claude-haiku-5-5" = { input = 0.10, output = 0.50 }
+"claude-sonnet-5-5" = { input = 2.0, output = 10.0 }
+# Price of one web search call. NOT confirmed. Check the pricing page.
+web_search_usd = 0.01
