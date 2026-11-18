@@ -31,9 +31,16 @@ def cmd_doctor(args) -> int:
         checks.append((True, f"anthropic package {anthropic.__version__}", ""))
     except ImportError:
         checks.append((False, "anthropic package", "run: pip install -r requirements.txt"))
-    checks.append((bool(os.environ.get("ANTHROPIC_API_KEY")), "ANTHROPIC_API_KEY set",
-                   "create a key in the Anthropic console and set it as an environment variable"))
-    key = os.environ.get("ANTHROPIC_API_KEY", "")
+    from .claude import effective_backend
+    kind = effective_backend(cfg)
+    checks.append((True, f"backend: {kind}" + (" (your Claude plan login through Claude Code)" if kind == "claude-code" else " (Anthropic API)"), ""))
+    if kind == "claude-code":
+        checks.append((shutil.which("claude") is not None, "claude command (Claude Code) on PATH",
+                       "install Claude Code, run `claude` once and sign in with /login"))
+    else:
+        checks.append((bool(os.environ.get("ANTHROPIC_API_KEY")), "ANTHROPIC_API_KEY set",
+                       "set a key, or install Claude Code and use your Claude plan: set PAPER_FORGE_BACKEND=claude-code"))
+    key = os.environ.get("ANTHROPIC_API_KEY", "") if kind == "api" else ""
     if key.startswith("sk-ant-usr-"):
         has_ws = bool(os.environ.get("ANTHROPIC_WORKSPACE_ID", "").strip())
         checks.append((has_ws, "user-scoped key has a workspace id (ANTHROPIC_WORKSPACE_ID)",
@@ -66,10 +73,10 @@ def _pattern(args, cfg, need_api=True) -> dict:
     if path.exists() and not getattr(args, "refresh", False):
         print(f"(using saved research: {path.name})")
         return json.loads(path.read_text(encoding="utf-8"))
-    from .claude import Claude
+    from .claude import make_claude
     tracker = CostTracker(cfg)
     try:
-        p = research(cfg, Claude(cfg, tracker), args.company, args.role, refresh=True)
+        p = research(cfg, make_claude(cfg, tracker), args.company, args.role, refresh=True)
     except CapExceeded as e:
         print(e)
         raise SystemExit(2)
@@ -115,7 +122,7 @@ def cmd_gap(args) -> int:
 
 
 def cmd_generate(args) -> int:
-    from .claude import Claude
+    from .claude import make_claude
     from .pipeline import generate_papers
     cfg = load()
     if args.no_web:
@@ -136,7 +143,7 @@ def cmd_generate(args) -> int:
         print(f"  skipped: {n}")
     tracker = CostTracker(cfg)
     try:
-        generate_papers(cfg, Claude(cfg, tracker), tracker, pattern, split, args.papers, args.missing, cfg.web_check,
+        generate_papers(cfg, make_claude(cfg, tracker), tracker, pattern, split, args.papers, args.missing, cfg.web_check,
                         round_key=args.round, tree=args.tree, coding=not args.no_coding, media=not args.no_audio, writing_on=not args.no_writing)
     except CapExceeded as e:
         print(e)

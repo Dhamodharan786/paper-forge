@@ -6,3 +6,4 @@ out/
 cache/
 forge.local.toml
 .env
+.claude-run/

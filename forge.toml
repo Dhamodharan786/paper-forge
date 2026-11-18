@@ -25,6 +25,20 @@ web_check = true     # one web search per question (the biggest cost line). fals
 max_attempts = 3     # rewrites per question before it is flagged for a human
 chunk = 10           # questions written per call
 
+[backend]
+# How Paper Forge talks to Claude.
+#   api         - the Anthropic API with ANTHROPIC_API_KEY (billed per token on your Console account)
+#   claude-code - the `claude` command (Claude Code) with YOUR CLAUDE LOGIN, e.g. a Pro or Max plan. No API key, no API credits.
+#                 It counts against your plan's usage limits, which are small on Pro.
+#   auto        - api if ANTHROPIC_API_KEY is set, otherwise claude-code if the `claude` command is installed
+# Override per run with the environment variable PAPER_FORGE_BACKEND.
+kind = "auto"
+
+# Optional, claude-code backend only: use a different model than the one named above, for example if your plan
+# does not include Opus. Names the `claude` command accepts: opus, sonnet, haiku, or a full model id.
+[claude_code.models]
+# "claude-opus-5-5" = "sonnet"
+
 [limits]
 spend_cap_usd = 15.0
 

@@ -24,6 +24,8 @@ class Config:
     max_attempts: int = 3          # rewrites per question
     chunk: int = 10                # questions per generation call
     web_check: bool = True
+    backend: str = "auto"                       # auto | api | claude-code
+    claude_code_models: dict = None             # optional model name overrides for the claude-code backend
 
 
 def load(path: Path | None = None) -> Config:
@@ -55,4 +57,6 @@ def load(path: Path | None = None) -> Config:
         max_attempts=int(raw.get("generate", {}).get("max_attempts", 3)),
         chunk=int(raw.get("generate", {}).get("chunk", 10)),
         web_check=bool(raw.get("originality", {}).get("web_check", True)),
+        backend=str(raw.get("backend", {}).get("kind", "auto")).lower(),
+        claude_code_models=dict(raw.get("claude_code", {}).get("models", {})),
     )

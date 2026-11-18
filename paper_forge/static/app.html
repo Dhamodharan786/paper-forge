@@ -314,10 +314,13 @@ details.more{margin:6px 0 12px} details.more summary{cursor:pointer;font-weight:
   function refreshStatus(){
     return api('/api/app').then(function(a){
       S.app=a;
-      $('#status').innerHTML=(a.hasKey?'<span class="pill ok">API key set</span>':'<span class="pill bad">No API key</span>')+
+      var cc=a.backend==='claude-code';
+      $('#status').innerHTML=(cc?(a.hasKey?'<span class="pill ok">Claude Code (your plan)</span>':'<span class="pill bad">Claude Code not found</span>'):(a.hasKey?'<span class="pill ok">API key set</span>':'<span class="pill bad">No API key</span>'))+
         '<span class="pill mute">Spent '+usd(a.spentUsd)+' of '+usd(a.capUsd)+'</span>';
       var b='';
-      if(!a.hasKey)b+='<div class="banner bad">ANTHROPIC_API_KEY is not set, so research and generation cannot run. Set it, then restart this app. (Setup is in the README.)</div>';
+      if(cc&&a.hasKey)b+='<div class="banner">Using your Claude plan through Claude Code, no API key. Usage counts against your plan limits, which are small on Pro: a full paper with coding problems may hit them. Dollar amounts here are the list-price equivalent, not a bill.</div>';
+      if(cc&&!a.hasKey)b+='<div class="banner bad">The `claude` command was not found. Install Claude Code, run `claude` once and sign in, then restart this app.</div>';
+      if(!cc&&!a.hasKey)b+='<div class="banner bad">No Claude access: set ANTHROPIC_API_KEY, or install Claude Code and sign in to use your plan (set PAPER_FORGE_BACKEND=claude-code). Then restart this app.</div>';
       if(a.needsWorkspaceId)b+='<div class="banner bad">Your key is a user key, not tied to a workspace. Set ANTHROPIC_WORKSPACE_ID (the workspace id from the Console) or create the key inside a workspace, then restart this app.</div>';
       if(!a.repoOk)b+='<div class="banner">The content repo folder was not found: '+esc(a.repo)+'. Fix [paths] repo in forge.local.toml.</div>';
       $('#banners').innerHTML=b;

@@ -16,6 +16,22 @@ discussion (gaps and difficulty, with a cost estimate and spending cap), the liv
 record the developer and tester sign-offs, and allow commit, push and PR one step at a time. It runs on your own machine only
 (127.0.0.1) and checks every request, so another web page cannot drive it. Everything below is the same flow from the terminal.
 
+## No API key? Use your Claude plan (Pro or Max)
+Paper Forge has two ways to reach Claude, chosen by `[backend] kind` in `forge.toml` (default `auto`):
+- **api**: the Anthropic API with `ANTHROPIC_API_KEY`. Billed per token on your Console account. A Claude.ai chat plan does NOT include API credits.
+- **claude-code**: runs the `claude` command (Claude Code) with your own Claude login. No key, no API credits.
+  `auto` picks this when no `ANTHROPIC_API_KEY` is set and `claude` is installed. Force it with `PAPER_FORGE_BACKEND=claude-code`.
+
+To use it: install Claude Code, run `claude` once and sign in (`/login`), then `python -m paper_forge doctor`.
+Things to know:
+- Usage counts against your plan's limits, which are small on Pro. Start small: 1 paper, `--no-coding --no-audio`, `--no-web`.
+  If you hit the limit the run stops with a clear message and keeps finished work; wait for the reset and run again.
+- If your plan does not include Opus, map it in `forge.toml`: `[claude_code.models]` `"claude-opus-5-5" = "sonnet"`.
+- Each call runs with MCP servers, skills and extra settings switched off (about 1,000 tokens of overhead instead of about 30,000).
+- The dollar figures are the list-price equivalent reported by the tool, not a bill. Calls run one after another and each takes
+  a few seconds longer than the API, so a full paper is slower.
+- Check Anthropic's terms for scripted use of a subscription.
+
 ## Setup (once)
 1. Python 3.12: `winget install Python.Python.3.12`
 2. `python -m venv .venv` then `.venv\Scripts\pip install -r requirements.txt`

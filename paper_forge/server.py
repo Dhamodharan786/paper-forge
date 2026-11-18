@@ -11,6 +11,7 @@ from __future__ import annotations
 import dataclasses
 import json
 import os
+import shutil
 import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -48,8 +49,8 @@ class State:
             if self._factory:
                 self._claude = self._factory(self.cfg, self.tracker)
             else:
-                from .claude import Claude
-                self._claude = Claude(self.cfg, self.tracker)
+                from .claude import make_claude
+                self._claude = make_claude(self.cfg, self.tracker)
         return self._claude
 
     def set_cap(self, usd: float) -> None:
@@ -122,13 +123,17 @@ def make_handler(state: State):
                 if u.path == "/review":
                     return self._send(200, (STATIC / "review.html").read_bytes(), "text/html; charset=utf-8")
                 if u.path == "/api/app":
+                    from .claude import effective_backend
+                    backend = effective_backend(cfg)
                     key = os.environ.get("ANTHROPIC_API_KEY", "")
                     ws = bool(os.environ.get("ANTHROPIC_WORKSPACE_ID", "").strip())
+                    cc = shutil.which("claude") is not None
                     return self._json(200, {
                         "capUsd": cfg.spend_cap_usd, "spentUsd": round(state.tracker.total, 4),
                         "models": {"research": cfg.research_model, "generator": cfg.generator_model, "checker": cfg.checker_model},
-                        "repo": str(cfg.repo), "repoOk": cfg.repo.is_dir(), "hasKey": bool(key),
-                        "needsWorkspaceId": key.startswith("sk-ant-usr-") and not ws})
+                        "repo": str(cfg.repo), "repoOk": cfg.repo.is_dir(), "backend": backend,
+                        "hasKey": bool(key) if backend == "api" else cc,
+                        "needsWorkspaceId": backend == "api" and key.startswith("sk-ant-usr-") and not ws})
                 if u.path == "/api/job":
                     return self._json(200, state.jobs.get(g("id"), int(g("since", "0"))) | {"spentUsd": round(state.tracker.total, 4)})
                 if u.path == "/api/gap":
