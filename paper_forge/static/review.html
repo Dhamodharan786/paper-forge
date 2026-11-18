@@ -66,7 +66,7 @@ details.q>summary::-webkit-details-marker{display:none}
   var cur=null, pending={}, busy=false;
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
   function api(path,opt){return fetch(path,opt).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||r.statusText);return j})})}
-  function usd(x){return '$'+(+x||0).toFixed(2)}
+  function tok(x){return (Math.round(+x||0)).toLocaleString('en-US')}
 
   function bar(sp){
     if(!sp)return '';
@@ -81,7 +81,7 @@ details.q>summary::-webkit-details-marker{display:none}
       (vd?(!vd.ran?' <span class="pill warn">Repo validator not run</span>':vd.ok?' <span class="pill ok">Repo validator passed</span>':' <span class="pill bad">Repo validator failed</span>'):'')+
       (v.needsHuman?' <span class="pill bad">'+v.needsHuman+' need a human</span>':'')+
       (v.pendingImageSection?' <span class="pill warn">Image section pending (developer task)</span>':'')+
-      '</div><div class="muted">Cost '+usd(v.costUsd)+(v.editsCostUsd?' + edits '+usd(v.editsCostUsd):'')+'</div></div>'+
+      '</div><div class="muted">Tokens '+tok(v.tokens)+(v.editsTokens?' + edits '+tok(v.editsTokens):'')+'</div></div>'+
       '<div class="row" style="margin-top:8px"><span class="muted" style="width:72px">Requested</span>'+bar(v.requested)+'</div>'+
       '<div class="row" style="margin-top:4px"><span class="muted" style="width:72px">Delivered</span>'+bar(v.delivered)+'</div></div>';
   }
@@ -162,7 +162,7 @@ details.q>summary::-webkit-details-marker{display:none}
     var n=Object.keys(pending).length;
     $('#pendTxt').textContent=busy?'Rewriting with Claude...':(n?n+(n===1?' change':' changes')+' pending':'No changes pending');
     $('#pendSub').textContent=busy?'Each question is rewritten, then checked for originality and difficulty again.':
-      (n?'Estimated cost about '+usd(n*0.07)+' ('+n+' x about $0.07). Press Generate to apply.':'Press Edit on a question and pick Easy, Medium or Hard. Nothing changes until you press Generate.');
+      (n?'Estimated about '+tok(n*12000)+' tokens ('+n+' x about 12,000). Press Generate to apply.':'Press Edit on a question and pick Easy, Medium or Hard. Nothing changes until you press Generate.');
     $('#gen').disabled=busy||!n; $('#pdf').disabled=busy||!!n||!cur;
     $('#pdf').title=n?'Press Generate first so your edits are in the PDF':'';
   }
@@ -175,7 +175,7 @@ details.q>summary::-webkit-details-marker{display:none}
     api('/api/generate',{method:'POST',headers:{'Content-Type':'application/json','X-Paper-Forge':'1'},body:JSON.stringify({key:cur.key,changes:pending})})
     .then(function(r){
       pending={}; busy=false; render(r.view);
-      $('#result').innerHTML='<div class="card"><b>Done.</b> Spent '+usd(r.spentUsd)+' this time, '+usd(r.sessionSpentUsd)+' this session.<div class="msg" style="margin-top:6px">'+
+      $('#result').innerHTML='<div class="card"><b>Done.</b> Used '+tok(r.spentTokens)+' tokens this time, '+tok(r.sessionSpentTokens)+' this session.<div class="msg" style="margin-top:6px">'+
         r.results.map(function(x){return '<div><span class="pill '+(x.ok?'ok':'bad')+'">'+(x.ok?'OK':'Not changed')+'</span> '+esc(x.questionKey)+': '+esc(x.message)+'</div>'}).join('')+'</div></div>';
     }).catch(function(e){busy=false;upd();$('#result').innerHTML='<div class="card"><span class="pill bad">Failed</span> '+esc(e.message)+'</div>'});
   });

@@ -24,8 +24,10 @@ class Config:
     max_attempts: int = 3          # rewrites per question
     chunk: int = 10                # questions per generation call
     web_check: bool = True
+    token_cap: int = 3_000_000                  # stop a session at this many tokens (read + written)
     backend: str = "auto"                       # auto | api | claude-code
     claude_code_models: dict = None             # optional model name overrides for the claude-code backend
+    claude_code_effort: dict = None             # optional effort level per model for the claude-code backend
 
 
 def load(path: Path | None = None) -> Config:
@@ -57,6 +59,8 @@ def load(path: Path | None = None) -> Config:
         max_attempts=int(raw.get("generate", {}).get("max_attempts", 3)),
         chunk=int(raw.get("generate", {}).get("chunk", 10)),
         web_check=bool(raw.get("originality", {}).get("web_check", True)),
+        token_cap=int(raw.get("limits", {}).get("token_cap", 3_000_000)),
         backend=str(raw.get("backend", {}).get("kind", "auto")).lower(),
         claude_code_models=dict(raw.get("claude_code", {}).get("models", {})),
+        claude_code_effort=dict(raw.get("claude_code", {}).get("effort", {})),
     )

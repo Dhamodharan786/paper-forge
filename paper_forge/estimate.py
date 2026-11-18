@@ -48,7 +48,7 @@ def counts(pattern: dict, split: tuple[int, int, int], missing: str, coding: boo
 def estimate(cfg: Config, pattern: dict, split: tuple[int, int, int], papers: int, *, missing: str = "dev",
              coding: bool = True, media: bool = True, writing: bool = True, web: bool = True) -> dict:
     c = counts(pattern, split, missing, coding, media, writing)
-    per_paper, searches = 0.0, 0
+    per_paper, searches, per_paper_tok = 0.0, 0, 0
     lines = []
     for unit, n in c.items():
         if not n:
@@ -57,13 +57,18 @@ def estimate(cfg: Config, pattern: dict, split: tuple[int, int, int], papers: in
         # one web check per item; short repeat sentences are skipped, so speaking is counted at about 2/3
         srch = round(n * (0.67 if unit == "speaking" else 1)) if web else 0
         usd += srch * cfg.web_search_usd
+        tok = round(sum(i + o for _, i, o, _ in UNITS[unit]) * RETRY[unit] * n)
+        per_paper_tok += tok
         per_paper += usd
         searches += srch
-        lines.append({"unit": unit, "count": n, "usd": round(usd, 2)})
+        lines.append({"unit": unit, "count": n, "usd": round(usd, 2), "tokens": tok})
     researched = cache_path(cfg, pattern["company"], pattern["role"]).exists()
     research_usd = 0.0 if researched else _usd(cfg, *RESEARCH)
+    research_tok = 0 if researched else RESEARCH[1] + RESEARCH[2]
     total = per_paper * papers + 0.0
+    total_tok = per_paper_tok * papers
     return {"counts": c, "perPaperUsd": round(per_paper, 2), "papers": papers, "totalUsd": round(total, 2),
             "searches": searches * papers, "researchUsdAlreadySpent": researched, "researchUsd": round(research_usd, 2),
-            "lines": lines, "capUsd": cfg.spend_cap_usd, "overCap": total > cfg.spend_cap_usd,
+            "lines": lines, "capUsd": cfg.spend_cap_usd, "overCap": total > cfg.spend_cap_usd or total_tok > cfg.token_cap,
+            "perPaperTokens": per_paper_tok, "totalTokens": total_tok, "researchTokens": research_tok, "capTokens": cfg.token_cap,
             "note": "Rough estimate from guessed token counts. The real cost is measured during the run."}

@@ -39,8 +39,15 @@ kind = "auto"
 [claude_code.models]
 # "claude-opus-5-5" = "sonnet"
 
+# Optional, claude-code backend only: effort level per model (low, medium, high, xhigh, max), keyed by the model named
+# in [models]. Unset means the `claude` command's default.
+[claude_code.effort]
+# "claude-sonnet-5-5" = "high"
+
 [limits]
 spend_cap_usd = 15.0
+# Tokens (read + written) per session. The run stops here, saves finished work and says what is left.
+token_cap = 3000000
 
 [prices]
 # USD per million tokens. From Anthropic's model table (cached 2026-11-03).

@@ -166,7 +166,7 @@ details.more{margin:6px 0 12px} details.more summary{cursor:pointer;font-weight:
             <label><input type="checkbox" id="oCoding" checked><span>Include coding problems</span></label>
             <label><input type="checkbox" id="oMedia" checked><span>Include listening and speaking sections (the dev team makes the audio)</span></label>
             <label><input type="checkbox" id="oWriting" checked><span>Include writing sections</span></label>
-            <label><input type="checkbox" id="oWeb" checked><span>Check every question on the web (one search each; the biggest cost line)</span></label>
+            <label><input type="checkbox" id="oWeb" checked><span>Check every question on the web (one search each; the biggest use of tokens)</span></label>
           </div>
         </details>
         <div class="actions"><button class="btn primary" id="startResearch">Start research</button></div>
@@ -196,7 +196,7 @@ details.more{margin:6px 0 12px} details.more summary{cursor:pointer;font-weight:
           <div><h2 id="runtitle">Generating</h2><p class="muted" id="runsub">Plan locked. No more questions will be asked.</p></div><span id="runstat"></span>
         </div>
         <div class="card" style="margin-top:12px;padding:12px 14px">
-          <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>Spend so far</b><span class="mono"><span id="mCost">$0.00</span> <span class="muted" id="mCap"></span></span></div>
+          <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>Tokens used so far</b><span class="mono"><span id="mCost">0</span> <span class="muted" id="mCap"></span></span></div>
           <div class="bar"><i id="mBar"></i></div>
           <p class="note" style="margin-top:6px" id="mNow">Waiting to start</p>
         </div>
@@ -273,7 +273,7 @@ details.more{margin:6px 0 12px} details.more summary{cursor:pointer;font-weight:
   var $=function(s,r){return (r||document).querySelector(s)};
   var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
-  function usd(x){return '$'+(+x||0).toFixed(2)}
+  function tok(x){return (Math.round(+x||0)).toLocaleString('en-US')}
   function api(path,body){
     var opt=body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-Paper-Forge':'1'},body:JSON.stringify(body)};
     return fetch(path,opt).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||r.statusText);return j})});
@@ -283,7 +283,7 @@ details.more{margin:6px 0 12px} details.more summary{cursor:pointer;font-weight:
   var STEPS=[
     {t:'1 Brief',s:'Company and role',who:'You',addr:'admin / paper-forge / new',side:{what:['Type the company and the role, and how hard the paper should be.','Use Easy, Medium or Hard, or set exact percentages.'],agent:'None yet',out:'A brief the agents work from'}},
     {t:'2 Research',s:'Confirmed pattern',who:'Researcher · Pattern analyst',addr:'admin / paper-forge / runs / research',side:{what:['Reads public sources for the latest pattern.','Scores confidence per field and flags conflicts.','Only the pattern is kept, never the question text.'],agent:'Researcher (Haiku 5.5 with web search)',out:'Blueprint draft with sources, saved for reuse'}},
-    {t:'3 Gap + discussion',s:'The one conversation',who:'Gap check · You',addr:'admin / paper-forge / runs / plan',side:{what:['Shows which question types we can generate and which we cannot.','You decide developer task, replace or leave out for each gap.','Difficulty counts and the estimated cost are shown before you lock.'],agent:'Gap check (script)',out:'Locked plan. The run asks nothing after this.'}},
+    {t:'3 Gap + discussion',s:'The one conversation',who:'Gap check · You',addr:'admin / paper-forge / runs / plan',side:{what:['Shows which question types we can generate and which we cannot.','You decide developer task, replace or leave out for each gap.','Difficulty counts and the estimated token use are shown before you lock.'],agent:'Gap check (script)',out:'Locked plan. The run asks nothing after this.'}},
     {t:'4 Run',s:'Generate and verify',who:'AI steps + scripts',addr:'admin / paper-forge / runs / live',side:{what:['The generator writes; scripts and the verifier check originality.','The rater labels each question by the written rules.','A failed question is rewritten up to 3 times.'],agent:'Generator (Opus 5.5), checker (Haiku 5.5), scripts',out:'Verified draft papers'}},
     {t:'5 Review',s:'Evidence per question',who:'You',addr:'admin / paper-forge / papers / review',side:{what:['Every question is listed with its options, answer and evidence.','Press Edit, pick Easy, Medium or Hard. Press Generate to rewrite the marked ones.','Fill in audio URLs from the dev team, then download the PDF.'],agent:'Claude rewrites only the questions you changed.',out:'Approved paper set and a PDF'}},
     {t:'6 Preview + PR',s:'Confirm, then PR',who:'Developer · Tester',addr:'admin / paper-forge / papers / preview',side:{what:['Saves the papers on a fresh local branch. Nothing is pushed.','A developer runs the backend and frontend on that branch; a tester tests.','Both sign off, then you allow commit, push and PR one by one.'],agent:'Scripts save the branch. People do the confirming.',out:'Open PR, not merged'}}
@@ -316,15 +316,14 @@ details.more{margin:6px 0 12px} details.more summary{cursor:pointer;font-weight:
       S.app=a;
       var cc=a.backend==='claude-code';
       $('#status').innerHTML=(cc?(a.hasKey?'<span class="pill ok">Claude Code (your plan)</span>':'<span class="pill bad">Claude Code not found</span>'):(a.hasKey?'<span class="pill ok">API key set</span>':'<span class="pill bad">No API key</span>'))+
-        '<span class="pill mute">Spent '+usd(a.spentUsd)+' of '+usd(a.capUsd)+'</span>';
+        '<span class="pill mute">Used '+tok(a.spentTokens)+' of '+tok(a.capTokens)+' tokens</span>';
       var b='';
-      if(cc&&a.hasKey)b+='<div class="banner">Using your Claude plan through Claude Code, no API key. Usage counts against your plan limits, which are small on Pro: a full paper with coding problems may hit them. Dollar amounts here are the list-price equivalent, not a bill.</div>';
       if(cc&&!a.hasKey)b+='<div class="banner bad">The `claude` command was not found. Install Claude Code, run `claude` once and sign in, then restart this app.</div>';
       if(!cc&&!a.hasKey)b+='<div class="banner bad">No Claude access: set ANTHROPIC_API_KEY, or install Claude Code and sign in to use your plan (set PAPER_FORGE_BACKEND=claude-code). Then restart this app.</div>';
       if(a.needsWorkspaceId)b+='<div class="banner bad">Your key is a user key, not tied to a workspace. Set ANTHROPIC_WORKSPACE_ID (the workspace id from the Console) or create the key inside a workspace, then restart this app.</div>';
       if(!a.repoOk)b+='<div class="banner">The content repo folder was not found: '+esc(a.repo)+'. Fix [paths] repo in forge.local.toml.</div>';
       $('#banners').innerHTML=b;
-      var cost=$('#mCap');if(cost)cost.textContent='of '+usd(a.capUsd)+' cap';
+      var cost=$('#mCap');if(cost)cost.textContent='of '+tok(a.capTokens)+' tokens cap';
     }).catch(function(){});
   }
 
@@ -431,16 +430,16 @@ details.more{margin:6px 0 12px} details.more summary{cursor:pointer;font-weight:
     h+='<div class="card" style="margin-top:14px;background:var(--surface-2)"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><h4 style="font-size:14px">Difficulty plan, from your split</h4><span class="mono">Easy '+S.E+' · Medium '+S.M+' · Hard '+S.H+'</span></div><div class="tablewrap" style="margin-top:8px;background:var(--surface)"><table><thead><tr><th>Section</th><th class="num">Qs</th><th class="num">Easy</th><th class="num">Medium</th><th class="num">Hard</th></tr></thead><tbody>'+
       g.plan.map(function(p){return '<tr><td>'+esc(p.section)+'</td><td class="num">'+p.questions+'</td><td class="num">'+p.easy+'</td><td class="num">'+p.medium+'</td><td class="num">'+p.hard+'</td></tr>'}).join('')+
       '<tr><td><b>Paper total</b></td><td class="num"><b>'+g.plan.reduce(function(a,p){return a+p.questions},0)+'</b></td><td class="num"><b>'+g.plan.reduce(function(a,p){return a+p.easy},0)+'</b></td><td class="num"><b>'+g.plan.reduce(function(a,p){return a+p.medium},0)+'</b></td><td class="num"><b>'+g.plan.reduce(function(a,p){return a+p.hard},0)+'</b></td></tr></tbody></table></div><p class="note" style="margin-top:6px">Counts use largest remainder so each section adds up exactly. Sections of types not built yet are listed above but not generated.</p></div>';
-    h+='<div class="card" style="margin-top:14px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><h4 style="font-size:14px">Estimated cost of this run</h4><span>'+(es.overCap?'<span class="pill bad">'+usd(es.totalUsd)+' is over the '+usd(es.capUsd)+' cap</span>':'<span class="pill ok">'+usd(es.totalUsd)+' of '+usd(es.capUsd)+' cap</span>')+'</span></div>'+
-      '<p class="note" style="margin:4px 0 8px"><b>Cost here means Claude tokens</b> (text read and written) <b>plus web searches</b>. Nothing is charged per student. '+esc(es.note)+'</p>'+
-      '<div class="tablewrap"><table><thead><tr><th>Per paper</th><th class="num">Items</th><th class="num">Est. cost</th></tr></thead><tbody>'+es.lines.map(function(l){return '<tr><td>'+unitName(l.unit)+'</td><td class="num">'+l.count+'</td><td class="num">'+usd(l.usd)+'</td></tr>'}).join('')+'<tr><td colspan="2"><b>One paper</b></td><td class="num"><b>'+usd(es.perPaperUsd)+'</b></td></tr><tr><td colspan="2"><b>'+es.papers+' paper(s), about '+es.searches+' web searches</b></td><td class="num"><b>'+usd(es.totalUsd)+'</b></td></tr></tbody></table></div>'+
-      '<p class="note" style="margin-top:6px">'+(es.researchUsdAlreadySpent?'Research is already saved, so it costs nothing again.':'Research for this company and role is not saved yet (about '+usd(es.researchUsd)+').')+'</p>'+
-      '<div class="row" style="margin-top:10px;align-items:end"><div class="field" style="margin:0"><label for="cap">Spending cap for this session (USD)</label><input class="input" id="cap" type="number" min="1" value="'+es.capUsd+'"></div><p class="note">At the cap the run stops, saves finished work and shows what is left. It does not keep spending.</p></div></div>';
+    h+='<div class="card" style="margin-top:14px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><h4 style="font-size:14px">Estimated token use of this run</h4><span>'+(es.overCap?'<span class="pill bad">'+tok(es.totalTokens)+' is over the '+tok(es.capTokens)+' token cap</span>':'<span class="pill ok">'+tok(es.totalTokens)+' of '+tok(es.capTokens)+' tokens cap</span>')+'</span></div>'+
+      '<p class="note" style="margin:4px 0 8px"><b>Tokens</b> are the text Claude reads and writes, <b>plus web searches</b>. Nothing is charged per student. '+esc(es.note)+'</p>'+
+      '<div class="tablewrap"><table><thead><tr><th>Per paper</th><th class="num">Items</th><th class="num">Est. tokens</th></tr></thead><tbody>'+es.lines.map(function(l){return '<tr><td>'+unitName(l.unit)+'</td><td class="num">'+l.count+'</td><td class="num">'+tok(l.tokens)+'</td></tr>'}).join('')+'<tr><td colspan="2"><b>One paper</b></td><td class="num"><b>'+tok(es.perPaperTokens)+'</b></td></tr><tr><td colspan="2"><b>'+es.papers+' paper(s), about '+es.searches+' web searches</b></td><td class="num"><b>'+tok(es.totalTokens)+'</b></td></tr></tbody></table></div>'+
+      '<p class="note" style="margin-top:6px">'+(es.researchUsdAlreadySpent?'Research is already saved, so it uses no tokens again.':'Research for this company and role is not saved yet (about '+tok(es.researchTokens)+' tokens).')+'</p>'+
+      '<div class="row" style="margin-top:10px;align-items:end"><div class="field" style="margin:0"><label for="cap">Token cap for this session</label><input class="input" id="cap" type="number" min="10000" step="10000" value="'+es.capTokens+'"></div><p class="note">At the cap the run stops, saves finished work and shows what is left. It does not keep going.</p></div></div>';
     h+='<div class="card" style="margin-top:14px;border-color:var(--accent)"><h4 style="font-size:14px;margin-bottom:6px">What the run will do</h4><p class="muted">Generate '+b.papers+' paper(s) for '+esc(b.company)+', '+esc(b.role)+'. Difficulty '+S.E+' / '+S.M+' / '+S.H+'. '+
       [g.counts.mcq?'MCQ sections':null,g.counts.coding?g.counts.coding+' coding problem(s)':null,(g.counts.recording+g.counts.speaking)?'listening and speaking':null,g.counts.writing?'writing':null].filter(Boolean).join(', ')+'. Every item is originality-checked'+(b.web?' (repo and web)':' (repo only)')+' and rated by difficulty, then saved as a draft for you to review.</p></div>';
     $('#gapbody').innerHTML=h;
     $$('input[name=miss]').forEach(function(x){x.addEventListener('change',function(){S.missing=x.value;loadGap()})});
-    var cap=$('#cap');if(cap)cap.addEventListener('change',function(){api('/api/cap',{usd:+cap.value}).then(function(){refreshStatus();loadGap()}).catch(function(e){alert_(e.message)})});
+    var cap=$('#cap');if(cap)cap.addEventListener('change',function(){api('/api/cap',{tokens:+cap.value}).then(function(){refreshStatus();loadGap()}).catch(function(e){alert_(e.message)})});
     S.done[2]=true;$('#lock').disabled=false;
   }
   $$('#oCoding,#oMedia,#oWriting,#oWeb,#np').forEach(function(x){x.addEventListener('change',function(){if(S.cur===2)loadGap()})});
@@ -449,7 +448,7 @@ details.more{margin:6px 0 12px} details.more summary{cursor:pointer;font-weight:
   $('#lock').addEventListener('click',function(){
     var b=brief(),capEl=$('#cap');
     var body={company:b.company,role:b.role,papers:b.papers,split:b.split,missing:S.missing,web:b.web,coding:b.coding,media:b.media,writing:b.writing,tree:b.tree,round:b.round};
-    if(capEl)body.capUsd=+capEl.value;
+    if(capEl)body.capTokens=+capEl.value;
     $('#lock').disabled=true;
     api('/api/run',body).then(function(r){
       go(3);S.done[2]=true;
@@ -463,7 +462,7 @@ details.more{margin:6px 0 12px} details.more summary{cursor:pointer;font-weight:
         $('#runresult').innerHTML='<div class="card" style="margin-top:12px;border-color:var(--ok);background:var(--ok-soft)"><b>'+j.result.keys.length+' draft paper(s) saved</b><div class="mono" style="margin-top:4px">'+j.result.keys.map(esc).join('<br>')+'</div>'+(j.result.needsHuman.some(function(n){return n>0})?'<p class="note" style="margin-top:6px">Some questions are flagged "needs a human". They were left out of the paper; see the review screen.</p>':'')+'</div>';
         $('#toReview').disabled=false;$('#mNow').textContent='Finished';$('#mBar').style.width='100%';
       },function(j){
-        $('#mCost').textContent=usd(j.spentUsd);var cap=S.app?S.app.capUsd:15;$('#mBar').style.width=Math.min(100,j.spentUsd/cap*100)+'%';
+        $('#mCost').textContent=tok(j.spentTokens);var cap=S.app?S.app.capTokens:3000000;$('#mBar').style.width=Math.min(100,j.spentTokens/cap*100)+'%';
         var last=j.lines.length?j.lines[j.lines.length-1]:null;if(last)$('#mNow').textContent=last.trim().slice(0,120);
       });
     }).catch(function(e){go(3);fail($('#runresult'),e);$('#lock').disabled=false});

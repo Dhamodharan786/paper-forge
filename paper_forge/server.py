@@ -53,6 +53,12 @@ class State:
                 self._claude = make_claude(self.cfg, self.tracker)
         return self._claude
 
+    def set_token_cap(self, tokens: int) -> None:
+        if not 10_000 <= tokens <= 100_000_000:
+            raise ValueError("The cap must be between 10,000 and 100,000,000 tokens")
+        self.cfg = dataclasses.replace(self.cfg, token_cap=int(tokens))
+        self.tracker.cfg = self.cfg
+
     def set_cap(self, usd: float) -> None:
         if not 1 <= usd <= 1000:
             raise ValueError("The cap must be between 1 and 1000 USD")
@@ -130,19 +136,21 @@ def make_handler(state: State):
                     cc = shutil.which("claude") is not None
                     return self._json(200, {
                         "capUsd": cfg.spend_cap_usd, "spentUsd": round(state.tracker.total, 4),
+                        "capTokens": cfg.token_cap, "spentTokens": state.tracker.tokens,
                         "models": {"research": cfg.research_model, "generator": cfg.generator_model, "checker": cfg.checker_model},
                         "repo": str(cfg.repo), "repoOk": cfg.repo.is_dir(), "backend": backend,
                         "hasKey": bool(key) if backend == "api" else cc,
                         "needsWorkspaceId": backend == "api" and key.startswith("sk-ant-usr-") and not ws})
                 if u.path == "/api/job":
-                    return self._json(200, state.jobs.get(g("id"), int(g("since", "0"))) | {"spentUsd": round(state.tracker.total, 4)})
+                    return self._json(200, state.jobs.get(g("id"), int(g("since", "0"))) | {"spentUsd": round(state.tracker.total, 4), "spentTokens": state.tracker.tokens})
                 if u.path == "/api/gap":
                     return self._json(200, self._gap(cfg, g("company"), g("role"), g("split", "30/50/20"), g("missing", "dev"),
                                                      int(g("papers", "1")), g("coding", "1") == "1", g("media", "1") == "1",
                                                      g("writing", "1") == "1", g("web", "1") == "1"))
                 if u.path == "/api/drafts":
                     return self._json(200, {"drafts": review.list_drafts(cfg), "capUsd": cfg.spend_cap_usd,
-                                            "spentUsd": round(state.tracker.total, 4)})
+                                            "spentUsd": round(state.tracker.total, 4),
+                                            "capTokens": cfg.token_cap, "spentTokens": state.tracker.tokens})
                 if u.path == "/api/paper":
                     return self._json(200, review.view(cfg, g("key")))
                 if u.path == "/api/pdf":
@@ -188,6 +196,9 @@ def make_handler(state: State):
                 body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
 
                 if path == "/api/cap":
+                    if "tokens" in body:
+                        state.set_token_cap(int(body["tokens"]))
+                        return self._json(200, {"capTokens": state.cfg.token_cap})
                     state.set_cap(float(body["usd"]))
                     return self._json(200, {"capUsd": state.cfg.spend_cap_usd})
 
@@ -197,10 +208,10 @@ def make_handler(state: State):
 
                     def job(log):
                         log(f"Researching {company}, {role} with {cfg.research_model} and web search ...")
-                        before = state.tracker.total
+                        before = state.tracker.tokens
                         p = research(state.cfg, state.claude(), company, role, refresh=refresh)
                         log(f"Found {len(p['sections'])} sections and {len(p.get('sources', []))} sources. "
-                            f"Cost this step ${state.tracker.total - before:.2f}")
+                            f"Used {state.tracker.tokens - before:,} tokens this step")
                         return pattern_summary(p)
                     return self._json(200, {"job": state.jobs.start("research", job)})
 
@@ -219,6 +230,8 @@ def make_handler(state: State):
                     if opts["missing"] not in ("dev", "replace", "drop") or opts["tree"] not in ("university", "placement"):
                         raise ValueError("bad option")
                     papers = max(1, min(10, int(body.get("papers", 1))))
+                    if "capTokens" in body:
+                        state.set_token_cap(int(body["capTokens"]))
                     if "capUsd" in body:
                         state.set_cap(float(body["capUsd"]))
 
@@ -236,6 +249,7 @@ def make_handler(state: State):
                     with state.lock:
                         out = review.apply_changes(state.cfg, state.claude(), state.tracker, key, changes, log=lambda *_: None)
                     out["sessionSpentUsd"] = round(state.tracker.total, 4)
+                    out["sessionSpentTokens"] = state.tracker.tokens
                     return self._json(200, out)
 
                 if path == "/api/audio":
