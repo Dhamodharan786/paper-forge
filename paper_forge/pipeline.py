@@ -205,7 +205,7 @@ def generate_papers(cfg: Config, claude: Claude, tracker: CostTracker, pattern: 
                       "generator": cfg.generator_model, "checker": cfg.checker_model},
                   "requestedSplit": requested, "deliveredSplit": delivered, "needsHuman": len(flagged),
                   "skipped": notes, "questions": report_q, "coding": coding_report, "media": media_report, "audio": audio_jobs, "cost": [c.__dict__ for c in tracker.calls],
-                  "costUsd": round(tracker.total, 4)}
+                  "costUsd": round(tracker.total, 4), "tokens": tracker.tokens}
         report["repoValidator"] = validate_draft(cfg, paper, tree)
         log(f"  repo validator: {'PASS' if report['repoValidator']['ok'] else 'FAIL'}")
         (cfg.out_dir / f"{key}.json").write_text(json.dumps(paper, indent=2, ensure_ascii=False), encoding="utf-8")

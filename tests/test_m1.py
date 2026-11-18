@@ -62,3 +62,15 @@ def test_cost_and_cap():
     t.add("y", "claude-opus-5-5", big)  # $20 output
     with pytest.raises(CapExceeded):
         t.check()
+
+
+def test_token_total_and_token_cap():
+    from dataclasses import replace
+    cfg = replace(load(), token_cap=1000)
+    t = CostTracker(cfg)
+    t.add("x", "claude-haiku-5-5", SimpleNamespace(input_tokens=600, output_tokens=300, server_tool_use=None))
+    assert t.tokens == 900 and "900" in t.summary() and "$" not in t.summary()
+    t.check()
+    t.add("y", "claude-haiku-5-5", SimpleNamespace(input_tokens=100, output_tokens=0, server_tool_use=None))
+    with pytest.raises(CapExceeded, match="Token use 1,000"):
+        t.check()

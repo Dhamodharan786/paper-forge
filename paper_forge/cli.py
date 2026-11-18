@@ -138,7 +138,7 @@ def cmd_generate(args) -> int:
     n_media = 0 if args.no_audio else sum(len(m["targets"]) for m in build_media_plan(pattern, split))
     n_code = 0 if args.no_coding else sum(len(c["targets"]) for c in gapmod_coding(pattern, split))
     print(f"Plan: {args.papers} paper(s), {n_q} questions + {n_code} coding problem(s) + {n_media} listening/speaking item(s) + {n_write} writing task(s) each, split {args.split}, "
-          f"web check {'on' if cfg.web_check else 'off'}, cap ${cfg.spend_cap_usd:.2f}")
+          f"web check {'on' if cfg.web_check else 'off'}, cap {cfg.token_cap:,} tokens")
     for n in notes:
         print(f"  skipped: {n}")
     tracker = CostTracker(cfg)

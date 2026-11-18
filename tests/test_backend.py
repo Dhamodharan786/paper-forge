@@ -33,7 +33,7 @@ class FakeRun:
 
 @pytest.fixture
 def cc(tmp_path, monkeypatch):
-    cfg = replace(load(), cache_dir=tmp_path / "cache", claude_code_models={})
+    cfg = replace(load(), cache_dir=tmp_path / "cache", claude_code_models={}, claude_code_effort={})
     monkeypatch.setattr(cl.shutil, "which", lambda name: "C:/bin/claude.exe" if name == "claude" else None)
     return cl.ClaudeCode(cfg, CostTracker(cfg)), cfg
 
@@ -82,6 +82,17 @@ def test_model_override_for_plans_without_opus(cc, monkeypatch):
     c.ask(label="g", model="claude-opus-5-5", system="S", user="u")
     assert run.calls[0][0][run.calls[0][0].index("--model") + 1] == "sonnet"
     assert c.tracker.calls[0].model == "claude-opus-5-5"                              # still priced as the model asked for
+
+
+def test_effort_per_model(cc, monkeypatch):
+    c, cfg = cc
+    c.cfg = replace(cfg, claude_code_effort={"claude-sonnet-5-5": "high"})
+    run = FakeRun(ok_json())
+    monkeypatch.setattr(cl.subprocess, "run", run)
+    c.ask(label="r", model="claude-sonnet-5-5", system="S", user="u")
+    c.ask(label="c", model="claude-haiku-5-5", system="S", user="u")
+    assert run.calls[0][0][run.calls[0][0].index("--effort") + 1] == "high"
+    assert "--effort" not in run.calls[1][0]                                         # other models keep the default
 
 
 @pytest.mark.parametrize("text,hint", [("Not logged in · Please run /login", "sign in"),

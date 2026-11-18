@@ -104,6 +104,9 @@ class ClaudeCode:
                "--setting-sources", "project", "--system-prompt-file", sysfile]
         if web:
             cmd += ["--allowedTools", "WebSearch"]
+        effort = (self.cfg.claude_code_effort or {}).get(model)
+        if effort:
+            cmd += ["--effort", effort]
         try:
             r = subprocess.run(cmd, input=user, capture_output=True, text=True, encoding="utf-8", errors="replace",
                                timeout=self.TIMEOUT, cwd=self.workdir)

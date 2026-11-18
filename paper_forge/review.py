@@ -129,7 +129,8 @@ def view(cfg: Config, key: str) -> dict:
             "requested": report.get("requestedSplit"), "delivered": report.get("deliveredSplit"),
             "needsHuman": report.get("needsHuman", 0), "pendingImageSection": pending,
             "validator": report.get("repoValidator"), "costUsd": report.get("costUsd"),
-            "editsCostUsd": report.get("editsCostUsd", 0)}
+            "editsCostUsd": report.get("editsCostUsd", 0),
+            "tokens": report.get("tokens"), "editsTokens": report.get("editsTokens", 0)}
 
 
 def _company_role(paper: dict, report: dict) -> tuple[str, str]:
@@ -160,7 +161,7 @@ def apply_changes(cfg: Config, claude: Claude, tracker: CostTracker, key: str, c
             raise ValueError(f"bad level {lvl!r}")
     paper, report = load(cfg, key)
     company, role = _company_role(paper, report)
-    start_cost, start_calls = tracker.total, len(tracker.calls)
+    start_cost, start_calls, start_tok = tracker.total, len(tracker.calls), tracker.tokens
     index = _index_for(cfg, key, paper, set(changes))
     ev = _evidence(report)
     results = []
@@ -203,7 +204,9 @@ def apply_changes(cfg: Config, claude: Claude, tracker: CostTracker, key: str, c
     report["deliveredSplit"] = {l: sum(1 for x in live if x["rated"] == l) for l in LEVELS}
     report["needsHuman"] = sum(1 for x in live if (x.get("flag") or "").startswith("needs"))
     spent = tracker.total - start_cost
+    spent_tok = tracker.tokens - start_tok
     report["editsCostUsd"] = round(report.get("editsCostUsd", 0) + spent, 4)
+    report["editsTokens"] = report.get("editsTokens", 0) + spent_tok
     report.setdefault("editLog", []).append({"at": time.strftime("%Y-%m-%d %H:%M:%S"), "changes": changes,
                                               "costUsd": round(spent, 4)})
     counts = {l: sum(1 for s in paper["sections"] if s["type"] != "CODING" for q in s["questions"] if q["complexity"] == l) for l in LEVELS}
@@ -211,4 +214,4 @@ def apply_changes(cfg: Config, claude: Claude, tracker: CostTracker, key: str, c
     report["repoValidator"] = validate_draft(cfg, paper, report.get("tree", "university"))
     _save(cfg, key, paper, report)
     return {"results": results, "view": view(cfg, key), "spentUsd": round(spent, 4),
-            "callsMade": len(tracker.calls) - start_calls}
+            "spentTokens": spent_tok, "callsMade": len(tracker.calls) - start_calls}
