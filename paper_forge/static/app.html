@@ -320,7 +320,6 @@ details.more{margin:6px 0 12px} details.more summary{cursor:pointer;font-weight:
       var b='';
       if(cc&&!a.hasKey)b+='<div class="banner bad">The `claude` command was not found. Install Claude Code, run `claude` once and sign in, then restart this app.</div>';
       if(!cc&&!a.hasKey)b+='<div class="banner bad">No Claude access: set ANTHROPIC_API_KEY, or install Claude Code and sign in to use your plan (set PAPER_FORGE_BACKEND=claude-code). Then restart this app.</div>';
-      if(a.needsWorkspaceId)b+='<div class="banner bad">Your key is a user key, not tied to a workspace. Set ANTHROPIC_WORKSPACE_ID (the workspace id from the Console) or create the key inside a workspace, then restart this app.</div>';
       if(!a.repoOk)b+='<div class="banner">The content repo folder was not found: '+esc(a.repo)+'. Fix [paths] repo in forge.local.toml.</div>';
       $('#banners').innerHTML=b;
       var cost=$('#mCap');if(cost)cost.textContent='of '+tok(a.capTokens)+' tokens cap';

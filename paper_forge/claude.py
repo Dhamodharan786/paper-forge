@@ -23,9 +23,7 @@ class Claude:
     def __init__(self, cfg: Config, tracker: CostTracker):
         self.cfg = cfg
         self.tracker = tracker
-        # A key made for a user (sk-ant-usr-...) is not tied to a workspace, so the API needs the workspace id as well.
-        ws = os.environ.get("ANTHROPIC_WORKSPACE_ID", "").strip()
-        self.client = anthropic.Anthropic(default_headers={"anthropic-workspace-id": ws} if ws else None)  # key: ANTHROPIC_API_KEY
+        self.client = anthropic.Anthropic()  # key: ANTHROPIC_API_KEY
 
     def ask(self, *, label: str, model: str, system: str, user: str,
             tools: list | None = None, max_tokens: int = 16000) -> str:
