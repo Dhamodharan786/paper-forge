@@ -27,10 +27,12 @@ chunk = 10           # questions written per call
 
 [backend]
 # How Paper Forge talks to Claude.
-#   api         - the Anthropic API with ANTHROPIC_API_KEY (billed per token on your Console account)
-#   claude-code - the `claude` command (Claude Code) with YOUR CLAUDE LOGIN, e.g. a Pro or Max plan. No API key, no API credits.
+#   claude-code - the `claude` command (Claude Code) with YOUR CLAUDE LOGIN, e.g. a Pro or Max plan. No API key needed.
 #                 It counts against your plan's usage limits, which are small on Pro.
-#   auto        - api if ANTHROPIC_API_KEY is set, otherwise claude-code if the `claude` command is installed
+#                 Recommended for most users: no key, no billing setup.
+#   api         - the Anthropic API with ANTHROPIC_API_KEY (billed per token on your Console account).
+#   auto        - api if ANTHROPIC_API_KEY is set, otherwise claude-code if the `claude` command is installed.
+# To use claude-code, add this to forge.local.toml:  [backend]  kind = "claude-code"
 # Override per run with the environment variable PAPER_FORGE_BACKEND.
 kind = "auto"
 
