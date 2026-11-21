@@ -40,11 +40,6 @@ def cmd_doctor(args) -> int:
     else:
         checks.append((bool(os.environ.get("ANTHROPIC_API_KEY")), "ANTHROPIC_API_KEY set",
                        "set a key, or install Claude Code and use your Claude plan: set PAPER_FORGE_BACKEND=claude-code"))
-    key = os.environ.get("ANTHROPIC_API_KEY", "") if kind == "api" else ""
-    if key.startswith("sk-ant-usr-"):
-        has_ws = bool(os.environ.get("ANTHROPIC_WORKSPACE_ID", "").strip())
-        checks.append((has_ws, "user-scoped key has a workspace id (ANTHROPIC_WORKSPACE_ID)",
-                       "this key is not tied to a workspace: set ANTHROPIC_WORKSPACE_ID, or create the key inside a workspace"))
     checks.append((cfg.repo.is_dir(), f"repo folder {cfg.repo}", "fix [paths] repo in forge.toml"))
     checks.append((shutil.which("git") is not None, "git on PATH", "install git"))
     for rel in ("companies/tools/validate_placement_papers.py", "scripts/verify-solutions.py",

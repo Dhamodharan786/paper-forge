@@ -84,11 +84,8 @@ def test_only_localhost_and_marked_posts_are_accepted(app):
 def test_status_and_pages(app, monkeypatch):
     monkeypatch.setenv("PAPER_FORGE_BACKEND", "api")                   # the API-key path, whatever forge.local.toml says
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-usr-test")
-    monkeypatch.delenv("ANTHROPIC_WORKSPACE_ID", raising=False)
     code, a = app["call"]("/api/app")
-    assert code == 200 and a["hasKey"] and a["needsWorkspaceId"] and a["models"]["generator"] == load().generator_model
-    monkeypatch.setenv("ANTHROPIC_WORKSPACE_ID", "wrkspc_x")
-    assert app["call"]("/api/app")[1]["needsWorkspaceId"] is False
+    assert code == 200 and a["hasKey"] and "needsWorkspaceId" not in a and a["models"]["generator"] == load().generator_model
     html = urllib.request.urlopen(app["base"] + "/").read().decode()
     assert "Specialist Programmer" in html and "Start research" in html and "Lock plan and generate" in html
 

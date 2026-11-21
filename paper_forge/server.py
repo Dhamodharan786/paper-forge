@@ -151,7 +151,6 @@ def make_handler(state: State):
                     from .claude import effective_backend
                     backend = effective_backend(cfg)
                     key = os.environ.get("ANTHROPIC_API_KEY", "")
-                    ws = bool(os.environ.get("ANTHROPIC_WORKSPACE_ID", "").strip())
                     cc = shutil.which("claude") is not None
                     return self._json(200, {
                         "capUsd": cfg.spend_cap_usd, "spentUsd": round(state.tracker.total, 4),
@@ -159,8 +158,7 @@ def make_handler(state: State):
                         "activeJob": state.jobs.active(),
                         "models": {"research": cfg.research_model, "generator": cfg.generator_model, "checker": cfg.checker_model},
                         "repo": str(cfg.repo), "repoOk": cfg.repo.is_dir(), "backend": backend,
-                        "hasKey": bool(key) if backend == "api" else cc,
-                        "needsWorkspaceId": backend == "api" and key.startswith("sk-ant-usr-") and not ws})
+                        "hasKey": bool(key) if backend == "api" else cc})
                 if u.path == "/api/jobs":
                     return self._json(200, {"jobs": state.jobs.snapshot(), "spentTokens": state.spent_tokens(),
                                             "capTokens": cfg.token_cap})

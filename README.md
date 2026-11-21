@@ -43,9 +43,8 @@ tokens twice); tasks that were still waiting start by themselves the next time t
 ## Setup (once)
 1. Python 3.12: `winget install Python.Python.3.12`
 2. `python -m venv .venv` then `.venv\Scripts\pip install -r requirements.txt`
-3. Set `ANTHROPIC_API_KEY` (own key, billed to Anthropic). A key made for a *user* (`sk-ant-usr-...`) is not tied to a
-   workspace, so also set `ANTHROPIC_WORKSPACE_ID` to the workspace id (or create the key inside a workspace). `doctor` and the
-   app both warn about this.
+3. Set `ANTHROPIC_API_KEY` (own key, billed to Anthropic), or skip it and use your Claude plan through Claude Code
+   (see "No API key?" above).
 4. Check `forge.toml` (repo path, models, prices, spending cap).
 5. `.venv\Scripts\python -m paper_forge doctor`
 
